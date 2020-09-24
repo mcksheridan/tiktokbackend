@@ -22,11 +22,7 @@ app.use(logger('dev'));
 app.use(express.json());
 
 var mongoose = require('mongoose');
-<<<<<<< HEAD
-var mongoDB = 'mongodb+srv://sheridan:password@cluster0.wiq7k.mongodb.net/tiktok?retryWrites=true&w=majority';
-=======
 var mongoDB = 'mongodb+srv://sheridan:3U0zuacMRM7N@cluster0.wiq7k.mongodb.net/tiktok?retryWrites=true&w=majority';
->>>>>>> 0ff2056f8fb7058d6b73d4e196048b71aec729cf
 mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
