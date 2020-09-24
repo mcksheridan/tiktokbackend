@@ -12,6 +12,8 @@ var usersRouter = require('./routes/users');
 var bookmarksRouter = require('./routes/bookmarks');  //Import routes for "bookmarks" area of site
 
 var app = express();
+const dotenv = require("dotenv")
+dotenv.config()
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,7 +24,8 @@ app.use(logger('dev'));
 app.use(express.json());
 
 var mongoose = require('mongoose');
-var mongoDB = 'mongodb+srv://sheridan:3U0zuacMRM7N@cluster0.wiq7k.mongodb.net/tiktok?retryWrites=true&w=majority';
+var mongoDB = process.env.ATLAS_URI
+//'mongodb+srv://sheridan:3U0zuacMRM7N@cluster0.wiq7k.mongodb.net/tiktok?retryWrites=true&w=majority';
 mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
