@@ -65,7 +65,7 @@ typings/
 
 .DS_Store
 
-populatedboriginal.js*
+populatedb original.js*
 populatedb.js*
 tiktoktest.js*
 bugs.txt*
