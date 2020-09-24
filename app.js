@@ -25,7 +25,6 @@ app.use(express.json());
 
 var mongoose = require('mongoose');
 var mongoDB = process.env.ATLAS_URI
-//'mongodb+srv://sheridan:3U0zuacMRM7N@cluster0.wiq7k.mongodb.net/tiktok?retryWrites=true&w=majority';
 mongoose.connect(mongoDB, { useNewUrlParser: true , useUnifiedTopology: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
