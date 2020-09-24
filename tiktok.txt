@@ -1,5 +1,63 @@
 TikTok User Stories / Requirements
 
+31 August
+- CRUD Features
+ - Displaying library data
+
+- React?
+31 August
+- CRUD Features
+ - Do not allow duplicate videos
+ - Integrate with TikTok API
+ - Check response of deleted TikTok videos
+- React
+1 September
+- CRUD Features (Forms)
+ - Create new bookmark lists
+  - Create a default bookmark list
+ - View bookmark lists
+ - Edit names of bookmark lists
+ - Delete bookmark lists
+ - Save URLs into the default list
+ - View URLs in the default list
+ - Delete URLs in the default list 
+ - Add videos from default list to other bookmark lists
+ - Sort videos in default list by creator or date added
+ - Delete a video from a bookmark list without deleting it from other lists
+ - (Deleting a video from the default list will delete it from all bookmark lists)
+- React
+2 September
+- CRUD Features
+ - Integrate with TikTok
+- React
+3 September
+- React
+4 September
+- React
+5 September
+- User authentication
+ - Users can register for an account
+ - Users can log in to their account
+ - Users can save videos, create bookmark lists, add videos to a list, etc.
+6 September
+- User authentication
+ - Add logging in using Google, Facebook, etc.
+ 7 September
+- CRUD Features
+ - Multiadd videos to the default list
+- React
+8 September
+- User authentication
+ - Share a bookmark list with an unregistered friend
+- React
+9 September
+- React/CRUD App
+ - Rearrange the order of videos in a bookmark list
+10
+- User authentication
+ - Create an RSS feed of a bookmark list
+
+Python: Create an API to simplify the graph project
 
 
 Phase 1:

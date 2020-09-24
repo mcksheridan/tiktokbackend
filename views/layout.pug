@@ -1,7 +1,42 @@
-doctype html
-html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
+extends header
+
+block layout
+
+    div.navigation
+      ul.navigation_list
+        li.navigation_option
+          a(href='#').material-icons.navigation_link.navigation_add-video library_add
+        li.navigation_option
+          a(href='#').material-icons.navigation_link.navigation_delete-video-from-list delete
+        li.navigation_option
+          a(href='#').material-icons.navigation_link.navigation_edit-list edit
+        li.navigation_option
+          a(href='#').navigation_link-list
+            span.navigation_link-list--fulltitle !{list.name}
+            span.material-icons.navigation_link.navigation_link-list-button expand_more
+        li.navigation_option
+          a(href='/').material-icons.navigation_link sort
+        li.navigation_option
+          a(href='/').material-icons.navigation_link search
+
+    .bookmark-list--hidden
+      ul.bookmark-list_list
+        li
+          a(href=`/../bookmarks`).bookmark-list_link All Videos
+        each list in list_list
+          li
+            a(href=`/../bookmarks/${list.url}`).bookmark-list_link !{list.name}
+
+    .popup
+      p.popup_close
+        a(href='#', class='popup_close-link')
+          span.material-icons close
+      p.popup_message
+      form.popup_form
+        button(class='popup_form-confirm form-button') Confirm
+        button(class='popup_form-cancel form-button') Cancel
+      include add-video-to-list
+      include edit-list
+      //-include edit-list
+
     block content
