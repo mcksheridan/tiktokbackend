@@ -23,4 +23,8 @@ bookmarkListSchema
 
 const BookmarkList = mongoose.model('Bookmarks', bookmarkListSchema)
 
+<<<<<<< HEAD
 module.exports = BookmarkList;
+=======
+module.exports = BookmarkList;
+>>>>>>> 0ff2056f8fb7058d6b73d4e196048b71aec729cf

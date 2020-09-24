@@ -41,4 +41,8 @@ describe('Video', function() {
         })
         console.log(test_instance_1);
 })
+<<<<<<< HEAD
 })
+=======
+})
+>>>>>>> 0ff2056f8fb7058d6b73d4e196048b71aec729cf

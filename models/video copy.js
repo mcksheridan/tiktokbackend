@@ -20,4 +20,8 @@ const videoSchema = new Schema({
 
 const Video = mongoose.model('Video', videoSchema);
 
+<<<<<<< HEAD
 module.exports = Video;
+=======
+module.exports = Video;
+>>>>>>> 0ff2056f8fb7058d6b73d4e196048b71aec729cf

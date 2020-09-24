@@ -230,4 +230,8 @@ exports.list_update_post = [
         // If not, find the list ID and change its name.
         // let listname = { name: req.body.list_name }
     }}
+<<<<<<< HEAD
 ];
+=======
+];
+>>>>>>> 0ff2056f8fb7058d6b73d4e196048b71aec729cf
