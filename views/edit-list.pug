@@ -1,0 +1,22 @@
+div.form-content.form-edit-list
+      
+    form(method='POST' action='./:id/update')
+        div.form-group
+            input.form-control(type='text', placeholder=list.name name='list_update')
+            input.form-control(type='hidden' name='list_id', value=list._id)
+            button(type='submit', class='form-button') Change Name
+        if errors
+            ul
+            for error in errors
+                li!= error.msg
+
+    a(href='#' class='form_delete-option') Delete This List
+
+    form(method='POST' action='./:id/delete' class='form_delete-form')
+        div.form-group
+            input.form-control(type='hidden', name='list_delete', value=list._id)
+            button(type='submit', class='form-button') Confirm Deletion
+        if errors
+            ul
+            for error in errors
+                li!= error.msg

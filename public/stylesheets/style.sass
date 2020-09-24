@@ -1,6 +1,232 @@
-body
-  padding: 50px
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap')
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons')
 
-a
-  color: #00B7FF
+$tiktokred: #ee15d2
+$tiktokblue: #69c9d0
+$tiktoksize: (100vmin / 3)
+
+  
+body
+  margin: 0px
+  padding: 0px
+  font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif
+
+.header
+  font-family: 'Montserrat', sans-serif
+  font-size: 1rem
+  line-height: 1rem
+  text-align: center
+
+.navigation_list
+  padding-left: 0
+  display: flex
+  flex-direction: row
+  justify-content: space-around
+  line-height: 1rem
+  list-style-type: none
+
+.stats
+  font-size: 0.85rem
+  line-height: 0.85rem
+  text-align: center
+
+.navigation_link
+  color: black
+  text-shadow: 0.1rem 0.1rem $tiktokred, -0.15rem -0.15rem $tiktokblue
+  text-decoration: none
+  font-size: 1.25rem
+
+.navigation_link-list
+  color: black
+  text-decoration: none
+  font-size: 1.25rem
+
+.navigation_link-list--expanded
+  @extend .navigation_link-list
+
+.bookmark-list--hidden
+  display: none
+
+.bookmark-list--shown
+  position: fixed
+  top: 5.25rem
+  left: 40%
+  width: 55%
+  max-height: 40%
+  overflow: scroll
+  background-color: #fff
+  border-left: 1px solid $tiktokred
+  border-top: 1px solid $tiktokblue
+  border-right: 1px solid black
+  border-bottom: 1px solid black
+
+.bookmark-list_list
+  list-style-type: none
+  display: flex
+  flex-direction: column
+  padding-left: 1rem
+
+.bookmark-list_link
+  color: #000
+  line-height: 1.5rem
+
+#add-video
+  display: none
+
+.navigation_search-form
+  display: grid
+  grid-template-columns: 90% 10%
+  max-width: 20vmin
+  max-height: 1rem
+
+.navigation_search-button
+  padding: 0
+  border: 0px
+  background-color: black
+
+.navigation_search-button .material-icons
+  font-size: 1rem
+  color: #fff
+
+.popup
+  display: none
+  position: absolute
+  left: 0
+  right: 0
+  margin-left: auto
+  margin-right: auto
+  width: 40%
+  background-color: white
+  border-left: 3px solid $tiktokred
+  border-top: 3px solid $tiktokblue
+  border-right: 3px solid black
+  border-bottom: 3px solid black
+
+.popup_close
+  margin-top: 0
+  margin-bottom: -3%
+  text-align: right
+
+.popup_message
+  padding: 3%
+
+.popup_form
+  display: none
+  flex-direction: row
+  justify-content: space-evenly
+  padding-bottom: 5%
+
+.form-button
+  font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif
+  background-color: #fff
+  padding: 2%
+
+.form-content
+  padding: 5%
+  display: none
+
+.form-add-video
+  display: none
+
+.form-add-list
+  display: none
+
+.form-group
+  display: flex
+  flex-direction: column
+  padding-bottom: 3%
+
+.form-control
+  font-size: 1rem
+
+.form_move-video
+  display: none
+
+.form_delete-form
+  display: none
+
+.multiadd_help-info
+  display: none
+
+.tiktok-popup
+  @extend .popup
+  width: 0
+  min-width: 325px
+  max-width: 605px
+
+.tiktok-popup_close
+  @extend .popup_close
+
+.content
+  position: fixed
+  top: 5rem
+  width: 100%
+  height: 85%
+  z-index: -1
+  overflow-x: hidden
+  overflow-y: scroll
+
+.tiktok-container
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax($tiktoksize, 1fr))
+  justify-items: center
+
+.tiktok-cell
+  background-color: rgba(0, 0, 0, 0.8)
+  position: relative
+  min-width: $tiktoksize
+  height: (($tiktoksize * 1280) / 720)
+  //line-height: 0px
+  border: 1px solid black
+  margin-bottom: 0.5rem
+
+.tiktok-thumbnail
+  position: absolute
+  top: 0px
+  left: 0px
+  min-width: $tiktoksize
+  height: (($tiktoksize * 1280) / 720)
+  background-repeat: no-repeat
+  background-size: 100% 100%
+
+.tiktok-thumbnail:hover
+  @extend .tiktok-thumbnail
+  opacity: 0.5
+
+.tiktok-grid
+  display: grid
+  grid-template-rows: 3fr 5fr 1fr
+  position: absolute
+  top: 0px
+  left: 0px
+  min-width: $tiktoksize
+  height: (($tiktoksize * 1280) / 720)
+  color: #fff
+
+.tiktok-grid_checkbox
+  text-align: right
+
+.tiktok-grid_info
+  text-align: center
+  max-width: $tiktoksize - 2vmin
+  margin-left: auto
+  margin-right: auto
+  line-height: 1rem
+  word-wrap: break-word
+  opacity: 0
+
+.tiktok-grid_title
+  overflow: scroll
+  max-height: ((($tiktoksize * 1280) / 720) / 4)
+
+.tiktok-grid_author
+  font-weight: bold
+
+.tiktok-grid_play
+  max-width: $tiktoksize
+  line-height: 0px
+  font-size: 3rem
+  padding-left: 0.25rem
+  color: #fff
+  text-shadow: 0.05rem 0.05rem $tiktokred, -0.05rem -0.05rem $tiktokblue
+  z-index: 2
