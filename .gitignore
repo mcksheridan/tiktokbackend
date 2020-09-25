@@ -76,3 +76,5 @@ uploads/
 tiktokbackend.git/
 
 app.js
+
+tests/
