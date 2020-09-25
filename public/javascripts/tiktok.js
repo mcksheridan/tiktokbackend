@@ -316,6 +316,7 @@ window.onload = function tiktok() {
         })
     }
 
+    if (sortVideo) {
     sortVideo.addEventListener('click', () => {
         openPopup()
         formContent.style.dispaly = 'block'
@@ -335,7 +336,7 @@ window.onload = function tiktok() {
         document.addEventListener('click', (event) => {
             closePopup(event)
         })
-    })
+    })}
 
     function videoAction(action, inputName, formAction) {
         const checkedVideos = document.querySelectorAll('.tiktok-grid_checkbox input:checked')
