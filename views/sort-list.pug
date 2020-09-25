@@ -1,16 +1,17 @@
-div.form-content.form-sort-video
+div.form-content.form-sort-list
       
     form(method='POST' action='')
         div.form-group
-            label(for='video_sort') Sort Videos By...
-            select(name='video_sort' class='video-sort_dropdown')
-                option(value='') Date Added to List (oldest first) (Default)
+            label(for='list_sort') Sort Videos By...
+            select(name='list_sort' class='list-sort_dropdown')
+                option(value='') Date Added to List (Default)
                 option(value="author_name") Creator Username (A - Z)
                 option(value="-author_name") Creator Username (Z - A)
                 option(value="-date") Date Added (new - old)
                 option(value="date") Date Added (old - new)
                 option(value="title") Video Description (A - Z)
                 option(value="-title") Video Description (Z - A)
+            input(type='hidden' value=list._id name='list_sort_id')
             button(type='submit', class='form-button') Sort Videos
         if errors
             ul

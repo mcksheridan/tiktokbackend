@@ -142,7 +142,14 @@ body {
 .tiktok-popup {
   width: 0;
   min-width: 325px;
-  max-width: 605px; }
+  max-width: 550px;
+  text-align: center; }
+
+.tiktok-popup_iframe {
+  height: 35vmax;
+  padding-left: 10%;
+  border: 0;
+  overflow: hidden; }
 
 .content {
   position: fixed;

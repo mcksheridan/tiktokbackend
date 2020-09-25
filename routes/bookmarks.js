@@ -20,7 +20,9 @@ var list_controller = require('../controllers/listController');
 // GET catalog home page.
 router.get('/', [video_controller.index]);
 
-router.post('/', [video_controller.video_create_post, video_controller.index]);
+router.post('/', video_controller.video_sort_post);
+
+router.post('/video/add', video_controller.video_create_post)
 
 /*// GET request for creating a Book. NOTE This must come before routes that display Book (uses id).
 router.get('/video/create', video_controller.video_create_get);
@@ -40,6 +42,9 @@ router.post('/video/search', [video_controller.video_search_post, list_controlle
 
 // POST request to move videos.
 router.post('/video/move', [video_controller.video_move_post])
+
+// POST request to sort videos.
+router.post('/video/sort', [video_controller.video_sort_post])
 
 /// AUTHOR ROUTES ///
 
@@ -66,6 +71,8 @@ router.post('/list/:id/update', list_controller.list_update_post);
 
 // GET request for one Author.
 router.get('/list/:id', list_controller.list_detail);
+
+router.post('/list/:id', list_controller.list_sort)
 
 // GET request for list of all Authors.
 // router.get('/lists', list_controller.list_list);

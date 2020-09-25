@@ -21,6 +21,7 @@ bookmarkListSchema
   return '/list/' + this._id;
 });
 
+
 const BookmarkList = mongoose.model('Bookmarks', bookmarkListSchema)
 
 module.exports = BookmarkList;

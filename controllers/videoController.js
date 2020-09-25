@@ -21,11 +21,12 @@ exports.index = function(req, res) {
         },
         video_list: function(callback) {
             Video.find({}, 'video_url author_url author_name title date', callback)
-            .sort([['date', 'descending']])
+            //.sort([['date', 'descending']])
         },
         list_list: function(callback) {
-            List.find({}, callback)
+            List.find({}, 'name', callback)
             .populate('videos')
+            .collation({locale: "en" })
             .sort([['name', 'ascending']])
         }
     },
@@ -105,16 +106,60 @@ exports.video_multiadd_post = function (req, res, next) {
         res.send('Please upload a valid "Like List.txt" file.')
     } else {
         const data = fs.readFileSync(req.file.path, 'UTF-8')
+        fs.unlinkSync(req.file.path)
         const regexCheck = new RegExp(/[^A-z0-9\s:\-/.]/)
         // If the data includes invalid characters, send an error to the user
         if (data.match(regexCheck)) {
-            fs.unlink(req.file.path)
             res.send('Your file contains invalid characters. Please upload your Like List file.')
         } else {
             // Create a for loop with regular expressions to go through each entry
-            console.log(req.file)
-            console.log(req.body.like_list)
-            res.send('Check the console')
+            const regexSort = new RegExp(/Date: \d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d\sVideo Link: https:\/\/www.tiktokv.com\/share\/video\/\d*\//, 'g')
+            const dateVideoArray = data.match(regexSort)
+            // Did the user upload a blank list?
+            if (dateVideoArray.length === 0) {
+                res.send('Your Like List is empty.')
+            } else {
+                const dateMatch = new RegExp(/\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d/)
+                const videoMatch = new RegExp(/https:\/\/www.tiktokv.com\/share\/video\/\d*\//)
+                for (let i = 0; i < dateVideoArray.length; i++) {
+                    const videoArray = dateVideoArray[i].match(videoMatch)
+                    const dateArray = dateVideoArray[i].match(dateMatch)
+                    const newVideo = videoArray.toString()
+                    const newDate = dateArray.toString()
+                    https.get(newVideo, response => {
+                        const redirectedUrl = response.responseUrl
+                        fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
+                        .then((fetchResponse) => fetchResponse.json())
+                        .then((data) => {
+                            let videodetail = { video_url: redirectedUrl}
+                            videodetail.title = data.title
+                            videodetail.author_url = data.author_url
+                            videodetail.author_name = data.author_name
+                            videodetail.date = newDate
+                            var video = new Video(videodetail)
+                            Video.findOne({ 'title': data.title, 'author_name': data.author_name })
+                            .exec(function (err, found_video) {
+                                if (err) {return next(err)}
+                                if (found_video) {
+                                    console.log(`A video by ${videodetail.author_name} called ${videodetail.title} already exists.`)
+                                } else if (videodetail.author_name === undefined) {
+                                    console.log('This video is unavailable. It may have been deleted.')
+                                } else {
+                                    video.save(function (err) {
+                                        if (err) {return next(err)}
+                                        console.log(`Video by ${videodetail.author_name} called ${videodetail.title} added!`)
+                                    })
+                                }
+                            })
+                        })
+                        .catch(function(err) {
+                            console.log(`Fetch error: ${err}`)
+                            throw new Error(err)
+                        })
+                    }) 
+                }
+            }
+            res.redirect('/')
         }
     }
 }
@@ -147,7 +192,7 @@ exports.video_search_post = [
             return;
         } else {
             var regex = new RegExp(video_search, 'gi')
-            Video.find( { $or: [ { title: regex}, { author_name: regex } ] } )
+            Video.find( { $or: [ { title: regex}, { author_name: regex } ] } ).collation( { locale: 'en', strength: 1 } )
             //( { author_name: regex } )//$or: [ { 'title': video_search }, { 'author_name': video_search } ]})
                 .exec( function(err, found_video) {
                     if (err) { return next(err); }
@@ -164,18 +209,32 @@ exports.video_search_post = [
 
 
 exports.video_sort_post = function(req, res, next) {
-    const sort = req.body.video_sort
-    if (sort === '') {
-        console.log('No sorting method selected.')
-        res.render('/')
-    } else {
-        async.parallel({
-        video_list: function(callback) {
-            Video.find({}, 'video_url author_url author_name title date', callback)
-            .sort([['date', 'descending']])
+    const sortOption = req.body.video_sort
+    async.parallel({
+        video_count: function(callback) {
+            Video.countDocuments({}, callback); // Pass an empty object as match condition to find all documents of this collection
         },
-    })
-    }
+        list_count: function(callback) {
+            List.countDocuments({}, callback);
+        },
+        video_list: function(callback) {
+            if (sortOption === '') {
+                Video.find({}, 'video_url author_url author_name title date', callback)
+            } else {
+                Video.find({}, 'video_url author_url author_name title date', callback)
+                .sort([[sortOption]])
+            }
+        },
+        list_list: function(callback) {
+            List.find({}, 'name', callback)
+            .populate('videos')
+            .collation({locale: "en" })
+            .sort([['name', 'ascending']])
+        }
+    },
+    function(err, results) {
+        res.render('index', { title: 'TikTok Favorites', error: err, data: results });
+    });
 };
 
 exports.video_move_post = function(req, res, next) {

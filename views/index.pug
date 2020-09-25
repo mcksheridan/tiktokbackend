@@ -6,8 +6,11 @@ html(lang='en')
     meta(name='viewport', content='width=device-width, initial-scale=1')
     link(rel='stylesheet', href='../stylesheets/style.css')
     script(src='../javascripts/tiktok.js')
-    script(src='https://www.tiktok.com/embed.js')
+    script(async='' src='https://www.tiktok.com/embed.js')
+    script(id="ttEmbedLibScript" src="https://s16.tiktokcdn.com/tiktok/falcon/embed/embed_lib_v0.0.7.js")
   body
+    script(async='' src='https://www.tiktok.com/embed.js')
+    script(id="ttEmbedLibScript" src="https://s16.tiktokcdn.com/tiktok/falcon/embed/embed_lib_v0.0.7.js")
     div.header
       h1= title
     div.navigation
@@ -25,6 +28,8 @@ html(lang='en')
           a(href='#').navigation_link-list
             span.navigation_link-list--fulltitle All Videos
             span.material-icons.navigation_link.navigation_link-list-button expand_more
+        li.navigation_option
+          a(href='#').material-icons.navigation_link.navigation_sort-video sort
         form(method='POST' action='/bookmarks/video/search' class='navigation_search-form')
           input.navigation_search-input(type='text', placeholder='Search creators and descriptions', name='video_search')
           button(type='submit', class='navigation_search-button')
@@ -59,6 +64,9 @@ html(lang='en')
           span.material-icons close
       .tiktok-popup_video
       p.tiktok-popup_link
+
+    script(async='' src='https://www.tiktok.com/embed.js')
+    script(id="ttEmbedLibScript" src="https://s16.tiktokcdn.com/tiktok/falcon/embed/embed_lib_v0.0.7.js")
     
     .content
       if error

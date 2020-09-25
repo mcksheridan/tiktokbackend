@@ -131,13 +131,15 @@ window.onload = function tiktok() {
     const addVideo = document.querySelector('.navigation_add-video')
     const addList = document.querySelector('.navigation_add-list')
     const editList = document.querySelector('.navigation_edit-list')
+    const sortList = document.querySelector('.navigation_sort-list')
     const moveDestination = document.querySelector('.form_move-video')
-    // const sortVideo = document.querySelector('.navigation_sort-video')
+    const sortVideo = document.querySelector('.navigation_sort-video')
     const formContent = document.querySelector('.form-content')
     const formAddVideo = document.querySelector('.form-add-video')
     const formAddList = document.querySelector('.form-add-list')
     const formEditList = document.querySelector('.form-edit-list')
-    // const formSortVideo = document.querySelector('.form-sort-video')
+    const formSortList = document.querySelector('.form-sort-list')
+    const formSortVideo = document.querySelector('.form-sort-video')
 
     function openPopup () {
         popup.style.display = 'block'
@@ -150,7 +152,9 @@ window.onload = function tiktok() {
         if (formEditList) {
             formEditList.style.display = 'none'
         }
-        // formSortVideo.style.display = 'none'
+        if (formSortVideo) {
+            formSortVideo.style.display = 'none'
+        }
         popupForm.style.display = 'none'
         popupClose.addEventListener('click', () => {
             popup.style.display = 'none'
@@ -186,7 +190,9 @@ window.onload = function tiktok() {
                 if (data.html === undefined) {
                     tiktokPopupVideo.innerHTML = 'Sorry, this video is not available. It may have been deleted.'
                 } else {
-                    tiktokPopupVideo.innerHTML = data.html
+                    const videoRegex = new RegExp(/\d{1,}/)
+                    const videoId = targetId.match(videoRegex).toString()
+                    tiktokPopupVideo.innerHTML = `<iframe src="https://www.tiktok.com/embed/${videoId}" class="tiktok-popup_iframe"></iframe>`
                     tiktokPopupLink.innerHTML = `<a href="${targetId}" target=_blank>Watch this video on TikTok.</a>`
                 }})
                 tiktokPopupClose.addEventListener('click', () => {
@@ -216,7 +222,12 @@ window.onload = function tiktok() {
         if (formEditList) {
             formEditList.style.display = 'none'
         }
-        // formSortVideo.style.display = 'none'
+        if (formSortList) {
+            formSortList.style.display = 'none'
+        }
+        if (formSortVideo) {
+        formSortVideo.style.display = 'none'
+        }
         const multiaddLink = document.querySelector('.multiadd_help-link')
         const multiaddInfo = document.querySelector('.multiadd_help-info')
         const multiaddInfoClose = document.querySelector('.multiadd_help-info-close')
@@ -237,10 +248,18 @@ window.onload = function tiktok() {
         formContent.style.display = 'block'
         formAddList.style.display = 'block'
         formAddVideo.style.display = 'none'
+        if (formAddVideo) {
+            formAddVideo.style.display = 'none'
+        }
         if (formEditList) {
             formEditList.style.display = 'none'
         }
-        // formSortVideo.style.display = 'none'
+        if (formSortList) {
+            formSortList.style.display = 'none'
+        }
+        if (formSortVideo) {
+            formSortVideo.style.display = 'none'
+        }
         document.addEventListener('click', (event) => {
             closePopup(event)
         })
@@ -257,6 +276,12 @@ window.onload = function tiktok() {
             if (formAddVideo) {
             formAddVideo.style.display = 'none'
             }
+            if (formSortList) {
+            formSortList.style.display = 'none'
+            }
+            if (formSortVideo) {
+            formSortVideo.style.display = 'none'
+            }
             const deleteOption = document.querySelector('.form_delete-option')
             const deleteForm = document.querySelector('.form_delete-form')
             deleteOption.addEventListener('click', () => {
@@ -268,16 +293,49 @@ window.onload = function tiktok() {
         })
     }
 
-    /*sortVideo.addEventListener('click', () => {
+    if (sortList) {
+        sortList.addEventListener('click', () => {
+            openPopup()
+            formContent.style.display = 'block'
+            formSortList.style.display = 'block'
+            if (formAddList) {
+                formAddList.style.display = 'none'
+            }
+            if (formAddVideo) {
+                formAddVideo.style.display = 'none'
+            }
+            if (formEditList) {
+                formEditList.style.display = 'none'
+            }
+            if (formSortVideo) {
+                formSortVideo.style.display = 'none'
+            }
+            document.addEventListener('click', (event) => {
+                closePopup(event)
+            })
+        })
+    }
+
+    sortVideo.addEventListener('click', () => {
         openPopup()
         formContent.style.dispaly = 'block'
         formSortVideo.style.display = 'block'
+        if (formAddList) {
         formAddList.style.display = 'none'
+        }
+        if (formAddVideo) {
         formAddVideo.style.display = 'none'
+        }
+        if (formEditList) {
+        formEditList.style.display = 'none'
+        }
+        if (formSortList) {
+        formSortList.style.display = 'none'
+        }
         document.addEventListener('click', (event) => {
             closePopup(event)
         })
-    })*/
+    })
 
     function videoAction(action, inputName, formAction) {
         const checkedVideos = document.querySelectorAll('.tiktok-grid_checkbox input:checked')

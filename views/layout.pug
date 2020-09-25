@@ -15,9 +15,11 @@ block layout
             span.navigation_link-list--fulltitle !{list.name}
             span.material-icons.navigation_link.navigation_link-list-button expand_more
         li.navigation_option
-          a(href='/').material-icons.navigation_link sort
-        li.navigation_option
+          a(href='#').material-icons.navigation_link.navigation_sort-list sort
+        //-li.navigation_option
           a(href='/').material-icons.navigation_link search
+        li.navigation_option
+          a(href='#').material-icons.navigation_link.navigation_link-check--unchecked check_box
 
     .bookmark-list--hidden
       ul.bookmark-list_list
@@ -37,6 +39,7 @@ block layout
         button(class='popup_form-cancel form-button') Cancel
       include add-video-to-list
       include edit-list
+      include sort-list
       //-include edit-list
 
     block content

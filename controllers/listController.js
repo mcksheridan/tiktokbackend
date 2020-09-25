@@ -27,11 +27,15 @@ exports.list_detail = function(req, res, next) {
     async.parallel({
         list_list: function(callback) {
             List.find({'_id': {$ne: id}}, callback)
+            .collation({locale: "en" })
             .sort([['name', 'ascending']])
         },
         list: function(callback) {
             List.findById(id)
-            .populate('videos')
+            .populate({
+                path: 'videos',
+                //options: { sort: 'author_name', collation: ( { locale: 'en', strength: 1 } )}
+            })
             .exec(callback);
         },
     }, function(err, results) {
@@ -44,6 +48,34 @@ exports.list_detail = function(req, res, next) {
         res.render('list_detail', { title: `TikTok Favorites: ${results.list.name}`, list: results.list, list_list: results.list_list, })
     })
 };
+
+exports.list_sort = function(req, res, next) {
+    const sortOption = req.body.list_sort
+    const id = req.body.list_sort_id
+    async.parallel({
+        list_list: function(callback) {
+            List.find({'_id': {$ne: id}}, callback)
+            .collation({locale: "en" })
+            .sort([['name', 'ascending']])
+        },
+        list: function(callback) {
+            List.findById(id)
+            .populate({
+                path: 'videos',
+                options: { sort: sortOption, collation: ( { locale: 'en', strength: 1 } )}
+            })
+            .exec(callback);
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        if (results.list==null) { // No results.
+            var err = new Error('List not found');
+            err.status = 404;
+            return next(err);
+        }
+        res.render('list_detail', { title: `TikTok Favorites: ${results.list.name}`, list: results.list, list_list: results.list_list, })
+    })
+}
 
 // Handle List create on POST.
 exports.list_create_post = [
@@ -59,7 +91,7 @@ exports.list_create_post = [
             return;
         }
         else {
-            List.findOne({ 'name': req.body.list_name })
+            List.findOne({ 'name': req.body.list_name }).collation( { locale: 'en', strength: 1 } )
             .exec( function(err, found_list) {
                 if(err) { return next(err); }
                 if (found_list) {
