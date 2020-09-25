@@ -223,6 +223,7 @@ exports.video_sort_post = function(req, res, next) {
             } else {
                 Video.find({}, 'video_url author_url author_name title date', callback)
                 .sort([[sortOption]])
+                .collation( { locale: 'en', strength: 1 } )
             }
         },
         list_list: function(callback) {

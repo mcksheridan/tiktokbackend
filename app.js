@@ -8,7 +8,6 @@ var logger = require('morgan');
 var sassMiddleware = require('node-sass-middleware');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 var bookmarksRouter = require('./routes/bookmarks');  //Import routes for "bookmarks" area of site
 
 var app = express();
