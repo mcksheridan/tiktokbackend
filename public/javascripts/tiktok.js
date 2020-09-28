@@ -166,7 +166,8 @@ window.onload = function tiktok() {
         if ((targetClass.startsWith('popup')) ||
         (targetClass.startsWith('navigation')) ||
         (targetClass.startsWith('form')) ||
-        (targetClass.startsWith('multiadd'))) { }
+        (targetClass.startsWith('multiadd')) ||
+        (targetClass.startswith('video-sort_dropdown'))) { }
         else {
             popup.style.display = 'none'
         }
