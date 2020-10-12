@@ -21,6 +21,7 @@ exports.index = function(req, res) {
         },
         video_list: function(callback) {
             Video.find({}, 'video_url author_url author_name title date', callback)
+            .limit(1)
             //.sort([['date', 'descending']])
         },
         list_list: function(callback) {
@@ -111,58 +112,77 @@ exports.video_multiadd_post = function (req, res, next) {
         // If the data includes invalid characters, send an error to the user
         if (data.match(regexCheck)) {
             res.send('Your file contains invalid characters. Please upload your Like List file.')
+        }
+        else if (data === '') {
+            res.send('Your Like List is empty.')
         } else {
             // Create a for loop with regular expressions to go through each entry
             const regexSort = new RegExp(/Date: \d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d\sVideo Link: https:\/\/www.tiktokv.com\/share\/video\/\d*\//, 'g')
             const dateVideoArray = data.match(regexSort)
-            // Did the user upload a blank list?
-            if (dateVideoArray.length === 0) {
-                res.send('Your Like List is empty.')
-            } else {
                 const dateMatch = new RegExp(/\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d/)
                 const videoMatch = new RegExp(/https:\/\/www.tiktokv.com\/share\/video\/\d*\//)
                 for (let i = 0; i < dateVideoArray.length; i++) {
                     const videoArray = dateVideoArray[i].match(videoMatch)
                     const dateArray = dateVideoArray[i].match(dateMatch)
                     const newVideo = videoArray.toString()
+                    const newVideoPath = newVideo.slice(23, newVideo.length).toString()
                     const newDate = dateArray.toString()
-                    https.get(newVideo, response => {
-                        const redirectedUrl = response.responseUrl
-                        fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
-                        .then((fetchResponse) => fetchResponse.json())
-                        .then((data) => {
-                            let videodetail = { video_url: redirectedUrl}
-                            videodetail.title = data.title
-                            videodetail.author_url = data.author_url
-                            videodetail.author_name = data.author_name
-                            videodetail.date = newDate
-                            var video = new Video(videodetail)
-                            Video.findOne({ 'title': data.title, 'author_name': data.author_name })
-                            .exec(function (err, found_video) {
-                                if (err) {return next(err)}
-                                if (found_video) {
-                                    console.log(`A video by ${videodetail.author_name} called ${videodetail.title} already exists.`)
-                                } else if (videodetail.author_name === undefined) {
-                                    console.log('This video is unavailable. It may have been deleted.')
-                                } else {
-                                    video.save(function (err) {
-                                        if (err) {return next(err)}
-                                        console.log(`Video by ${videodetail.author_name} called ${videodetail.title} added!`)
-                                    })
-                                }
-                            })
-                        })
-                        .catch(function(err) {
-                            console.log(`Fetch error: ${err}`)
-                            throw new Error(err)
-                        })
-                    }) 
+                    function multiAdd () {
+                        try {
+                            return new Promise((resolve, reject) => {
+                                setTimeout(function () {
+                                    const options = {
+                                        host: 'www.tiktokv.com',
+                                        path: newVideoPath,
+                                        port: 443,
+                                        family: 4,
+                                        method: 'GET'
+                                    }
+                                    setInterval(function () {
+                                    https.get(options, response => {
+                                        const redirectedUrl = response.responseUrl
+                                        fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
+                                        .then((fetchResponse) => fetchResponse.json())
+                                        .then((data) => {
+                                            let videodetail = { video_url: redirectedUrl}
+                                            videodetail.title = data.title
+                                            videodetail.author_url = data.author_url
+                                            videodetail.author_name = data.author_name
+                                            videodetail.date = newDate
+                                            var video = new Video(videodetail)
+                                            Video.findOne({ 'title': data.title, 'author_name': data.author_name })
+                                            .exec(function (err, found_video) {
+                                                if (err) {return next(err)}
+                                                if (found_video) {
+                                                    console.log(`A video by ${videodetail.author_name} called ${videodetail.title} already exists.`)
+                                                } else if (videodetail.author_name === undefined) {
+                                                    console.log('This video is unavailable. It may have been deleted.')
+                                                } else {
+                                                    video.save(function (err) {
+                                                        if (err) {return next(err)}
+                                                        console.log(`Video by ${videodetail.author_name} called ${videodetail.title} added!`)
+                                                    })
+                                                }
+                                            })
+                                        })
+                                        .catch(function(err) {
+                                            console.log(`Fetch error: ${err}`)
+                                            //throw new Error(err)
+                                        })
+                                    })}, 500) 
+                                }, reject('Whoops! An error occured'), 2000);
+                            });
+                        } catch (e) {
+                            console.log('error', e);
+                        }
+                    }
+                    multiAdd()
                 }
-            }
             res.redirect('/')
         }
     }
 }
+
 
 // Handle book delete on POST.
 exports.video_delete_post = function(req, res, next) {
@@ -220,8 +240,10 @@ exports.video_sort_post = function(req, res, next) {
         video_list: function(callback) {
             if (sortOption === '') {
                 Video.find({}, 'video_url author_url author_name title date', callback)
+                .limit(15)
             } else {
                 Video.find({}, 'video_url author_url author_name title date', callback)
+                .limit(15)
                 .sort([[sortOption]])
                 .collation( { locale: 'en', strength: 1 } )
             }
