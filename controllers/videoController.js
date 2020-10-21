@@ -2,8 +2,6 @@ var Video = require('../models/video');
 var List = require('../models/bookmarklist');
 
 const validator = require('express-validator');
-const { body,validationResult } = require('express-validator/check');
-const { sanitizeBody } = require('express-validator/filter');
 const { https } = require('follow-redirects');
 const fs = require('fs')
 
@@ -49,8 +47,11 @@ exports.index = function(req, res) {
 }
 
 exports.video_create_post = [
-    validator.body('video_url').trim().isURL( { protocols: ['http','https'], require_protocol: true, } ).withMessage('Please enter a valid TikTok URL beginning with https://')
-    .contains('tiktok.com', { ignoreCase: true }).withMessage('Please enter a URL from TikTok.com'),
+    validator.body('video_url').trim()
+    .isURL( { protocols: ['https'], require_protocol: true, } )
+    .withMessage('Please enter a valid TikTok URL beginning with https://')
+    .contains('tiktok.com', { ignoreCase: true })
+    .withMessage('Please enter a URL from TikTok.com'),
     validator.sanitizeBody('video_url'),
     (req, res, next) => {
         const errors = validator.validationResult(req);
@@ -61,45 +62,53 @@ exports.video_create_post = [
         }
         https.get(req.body.video_url, response => {
             const redirectedUrl = response.responseUrl
-            fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
-            .then((fetchResponse) => fetchResponse.json())
-            .then((data) => {
-              let videodetail = { video_url: redirectedUrl }
-              videodetail.title = data.title
-              videodetail.author_url = data.author_url
-              videodetail.author_name = data.author_name
-              if (req.body.date !== false) videodetail.date = req.body.date
-              var video = new Video(videodetail);
-              if (!errors.isEmpty()) {
-                res.render('/', { video: video, error: errors.array()});
-                return;
-            }
-            else {
-                Video.findOne({ 'title': data.title, 'author_name': data.author_name })
-                .exec( function(err, found_video) {
-                    if (err) { return next(err); }
-                    if (found_video) {
-                        res.send('Found a video with that title and author.');
+            const addOneVideo = (async function() {
+                    const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
+                    if (tiktokResponse.status >= 200 && tiktokResponse.status <= 299) {
+                        const tiktokData = await tiktokResponse.json()
+                        if (tiktokData.title === undefined) {
+                            const videoUnavailableMessage = 'This video is unavailable. It may have been deleted.'
+                            res.status(200).send(videoUnavailableMessage)
+                        } else {
+                            let videodetail = { video_url: redirectedUrl }
+                            videodetail.title = tiktokData.title
+                            videodetail.author_url = tiktokData.author_url
+                            videodetail.author_name = tiktokData.author_name
+                            const video = new Video(videodetail)
+                            Video.findOne( {'title': videodetail.title, 'author_name': videodetail.author_name })
+                            .exec(function (error, found_video) {
+                                if (error) {
+                                    return next(error)
+                                }
+                                if (found_video) {
+                                    const foundVideoMessage = `A video by ${videodetail.author_name}
+                                    called ${videodetail.title} already exists.`
+                                    res.status('200').send(foundVideoMessage)
+                                } else {
+                                    video.save(function (error) {
+                                        if (error) {
+                                            return next(error)
+                                        }
+                                        console.log(`Video by ${videodetail.author_name}
+                                        called ${videodetail.title} added!`)
+                                        res.redirect('/')
+                                    })
+                                }
+                            })
+                        }    
+                    } else {
+                        const fetchError = `Unsuccessful fetch response: \n
+                        Status: ${tiktokResponse.status} \n
+                        ${tiktokResponse.statusText}`
+                        res.status(500).send(fetchError)
                     }
-                    else {
-                        video.save(function (err) {
-                            if (err) {return next(err); }
-                            console.log('Video added')
-                            res.redirect('/')
-                        });
-                    }
-                });
-            }
-            })
-            .catch(function(err) {
-                console.log(`Fetch error: ${err}`)
-                throw new Error(err)
-            })
+            })()
+        }).on('error', error => {
+            const getError = `Unsuccessful get request: ${error}`
+            res.status(500).send(getError)
         })        
-
-        
     }
-];
+]
 
 exports.video_multiadd_post = function (req, res, next) {
     if (req.file === undefined) {
@@ -145,7 +154,7 @@ exports.video_multiadd_post = function (req, res, next) {
                     }
                     https.get(options, response => {
                         const redirectedUrl = response.responseUrl
-                        const async = (async function() {
+                        const addOneVideo = (async function() {
                             try {
                                 const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
                                 if (tiktokResponse.status >= 200 && tiktokResponse.status <= 299) {
@@ -160,14 +169,18 @@ exports.video_multiadd_post = function (req, res, next) {
                                         videodetail.date = newDate
                                         const video = new Video(videodetail)
                                         Video.findOne( {'title': videodetail.title, 'author_name': videodetail.author_name })
-                                        .exec(function (err, found_video) {
-                                            if (err) { return next(err) }
+                                        .exec(function (error, found_video) {
+                                            if (error) {
+                                                return next(error)
+                                            }
                                             if (found_video) {
                                                 console.log(`A video by ${videodetail.author_name}
                                                 called ${videodetail.title} already exists.`)
                                             } else {
-                                                video.save(function (err) {
-                                                    if (err) {return next(err)}
+                                                video.save(function (error) {
+                                                    if (error) {
+                                                        return next(error)
+                                                    }
                                                     console.log(`Video by ${videodetail.author_name}
                                                     called ${videodetail.title} added!`)
                                                 })
@@ -178,18 +191,18 @@ exports.video_multiadd_post = function (req, res, next) {
                                     const fetchError = `Unsuccessful fetch response: \n
                                     Status: ${tiktokResponse.status} \n
                                     ${tiktokResponse.statusText}`
-                                    throw new Error(fetchError)
+                                    res.status(500).send(fetchError)
                                 }
                             }
                             catch(status) {
                                 const awaitError = `Unsuccessful await attempt: \n
                                 Status: ${status}`
-                                throw new Error(awaitError)
+                                res.status(500).send(awaitError)
                             }
                         })()
-                    }).on('error', err => {
-                        console.error(`Unsuccessful get request: ${err}`)
-                        return process.exit()
+                    }).on('error', error => {
+                        const getError = `Unsuccessful get request: ${error}`
+                        res.status(500).send(getError)
                     })
                     delay(times-1)
                     videoCount += 1
@@ -198,7 +211,7 @@ exports.video_multiadd_post = function (req, res, next) {
                 }} catch(error) {
                     const timeoutError = `Unsuccessful timeout attempt: \n
                     Status: ${error}`
-                    throw new Error(timeoutError)
+                    res.status(500).send(timeoutError)
                 }
                 }, 500)
             } delay(arrayLength)
@@ -226,7 +239,7 @@ exports.video_search_post = [
     validator.body('video_search').trim().escape()
     .isLength( {min: 1} ).withMessage('Please enter a search term.'),
     validator.sanitizeBody('video_search'),
-    (req, res, next) => {
+    (req, res) => {
         const errors = validator.validationResult(req);
         if (!errors.isEmpty()) {
             console.error(errors)
@@ -278,7 +291,7 @@ exports.video_search_get = function(req, res, next) {
 }
 
 
-exports.video_sort_post = function(req, res, next) {
+exports.video_sort_post = function(req, res) {
     const sortOption = req.body.video_sort
     app.locals.sortVideoOption = sortOption
     res.redirect('/')

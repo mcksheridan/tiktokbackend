@@ -408,7 +408,7 @@ window.onload = function tiktok() {
     const deleteVideoFromList = document.querySelector('.navigation_delete-video-from-list')
     if (deleteVideoFromList) {
     deleteVideoFromList.addEventListener('click', () => {
-        videoAction('delete', 'deleted_video', './delete-video')
+        videoAction('delete', 'deleted_video', '../delete-video')
     })}
     
     const moveVideo = document.querySelector('.navigation_move-video')
