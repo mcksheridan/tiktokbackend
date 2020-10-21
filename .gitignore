@@ -78,3 +78,5 @@ tiktokbackend.git/
 app.js
 
 tests/
+
+middleware/

@@ -104,11 +104,36 @@ window.onload = function tiktok() {
         let thumbnail = event.target.parentNode.parentNode.querySelector('.tiktok-thumbnail')
         let tiktokInfo = event.target.parentNode.parentNode.querySelector('.tiktok-grid_info')
         let targetClass = event.target.parentNode.className
-        if ((targetClass.startsWith('tiktok-grid')) || (targetClass === 'tiktok-cell') || (targetClass === 'tiktok-container')) {
+        if ((targetClass.startsWith('tiktok-grid'))) {
             if (thumbnail !== null) {
                 thumbnail.style.zIndex = '-1'
                 tiktokInfo.style.opacity = '1'
+                console.log(event.target.className)
         }}
+        else {
+            if (thumbnail !== null) {
+                document.querySelectorAll('.tiktok-thumbnail').forEach(function (thumbnail) {
+                    thumbnail.style.zIndex = '0'
+                })
+                document.querySelectorAll('.tiktok-grid_info').forEach(function (info) {
+                    info.style.opacity = '0'
+                })
+                //document.getElementsByClassName('.tiktok-thumbnail').style.zIndex = '0'
+            }
+        }
+    })
+
+    document.addEventListener('mouseout', function(event) {
+        let thumbnail = event.target.parentNode.parentNode.querySelector('.tiktok-thumbnail')
+        let tiktokInfo = event.target.parentNode.parentNode.querySelector('.tiktok-grid_info')
+        let targetClass = event.target.parentNode.className
+        if ((targetClass.startsWith('tiktok-grid')) || (targetClass === 'tiktok-cell') || (targetClass === 'tiktok-container')) {
+            if (thumbnail !== null) {
+                thumbnail.style.zIndex = '0'
+                tiktokInfo.style.opacity = '1'
+                console.log(event.target.className)
+            }
+        }
         else {
             if (thumbnail !== null) {
                 document.querySelectorAll('.tiktok-thumbnail').forEach(function (thumbnail) {
@@ -184,7 +209,6 @@ window.onload = function tiktok() {
         if (targetClass.includes('tiktok-grid_play-button')) {
             tiktokPopup.style.display = 'block'
             let targetId = event.target.parentNode.id
-            console.log(targetId)
             fetch(`https://www.tiktok.com/oembed?url=${targetId}`)
             .then((response) => response.json())
             .then((data) => {
@@ -378,7 +402,7 @@ window.onload = function tiktok() {
     const deleteVideo = document.querySelector('.navigation_delete-video')
     if (deleteVideo) {
     deleteVideo.addEventListener('click', () => {
-        videoAction('delete', 'deleted_video', './bookmarks/video/delete')
+        videoAction('delete', 'deleted_video', '/../bookmarks/video/delete')
     })}
 
     const deleteVideoFromList = document.querySelector('.navigation_delete-video-from-list')
@@ -390,7 +414,7 @@ window.onload = function tiktok() {
     const moveVideo = document.querySelector('.navigation_move-video')
     if (moveVideo) {
     moveVideo.addEventListener('click', () => {
-        videoAction('move', 'moved_video', './bookmarks/video/move')
+        videoAction('move', 'moved_video', './video/move')
     })}
 
     const checkAll = document.querySelector('[class*="navigation_link-check"]')

@@ -1,6 +1,6 @@
 div.form-content.form-sort-list
       
-    form(method='POST' action='')
+    form(method='POST' action='/bookmarks/list/:id')
         div.form-group
             label(for='list_sort') Sort Videos By...
             select(name='list_sort' class='list-sort_dropdown')
@@ -11,7 +11,7 @@ div.form-content.form-sort-list
                 option(value="date") Date Added (old - new)
                 option(value="title") Video Description (A - Z)
                 option(value="-title") Video Description (Z - A)
-            input(type='hidden' value=list._id name='list_sort_id')
+            input(type='hidden' value=data.current_list._id name='list_sort_id')
             button(type='submit', class='form-button') Sort Videos
         if errors
             ul

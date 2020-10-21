@@ -7,59 +7,58 @@ const { sanitizeBody } = require('express-validator/filter');
 const { https } = require('follow-redirects');
 const fs = require('fs')
 
-var async = require('async');
-var fetch = require('node-fetch');
-const { abort } = require('process');
+const express = require('express')
+const app = express()
 
-exports.index = function(req, res) {   
-    
+const async = require('async');
+const fetch = require('node-fetch');
+
+app.locals.videoLimitPerPage = 15
+const videoLimitPerPage = app.locals.videoLimitPerPage
+
+exports.index = function(req, res) { 
+    const page = req.params.page  
     async.parallel({
         video_count: function(callback) {
-            Video.countDocuments({}, callback); // Pass an empty object as match condition to find all documents of this collection
+            Video.countDocuments({}, callback);
         },
         list_count: function(callback) {
             List.countDocuments({}, callback);
         },
         video_list: function(callback) {
             Video.find({}, 'video_url author_url author_name title date', callback)
-            .limit(1)
-            //.sort([['date', 'descending']])
+            .limit(videoLimitPerPage)
+            .skip(videoLimitPerPage * (page - 1))
+            .sort(app.locals.sortVideoOption)
+        },
+        current_page: function(callback) {
+            callback(null, page)
+        },
+        video_limit: function(callback) {
+            callback(null, videoLimitPerPage)
         },
         list_list: function(callback) {
             List.find({}, 'name', callback)
-            .populate('videos')
             .collation({locale: "en" })
             .sort([['name', 'ascending']])
         }
     },
     function(err, results) {
-        res.render('index', { title: 'TikTok Favorites', error: err, data: results });
-    });
-};
+        res.render('index', { title: 'TikTok Favorites', error: err, data: results })
+    })
+}
 
-/*exports.list_list = function(callback) {
-    List.find({}, callback)
-    .populate('videos')
-}*/
-
-// Display list of all books.
-//exports.video_list = function(req, res, next) {      
-//  };
-
-// Display video create form on GET.
-/*exports.video_create_get = function(req, res) {
-    res.render('index')
-    //res.send('NOT IMPLEMENTED: Video create GET');
-};*/
-
-// Handle book create on POST.
 exports.video_create_post = [
-    validator.body('video_url', 'Please enter a valid TikTok URL.').trim().isURL( { protocols: ['http','https'], require_protocol: true, } ).withMessage('Please enter a URL beginning with https://')
+    validator.body('video_url').trim().isURL( { protocols: ['http','https'], require_protocol: true, } ).withMessage('Please enter a valid TikTok URL beginning with https://')
     .contains('tiktok.com', { ignoreCase: true }).withMessage('Please enter a URL from TikTok.com'),
     validator.sanitizeBody('video_url'),
     (req, res, next) => {
         const errors = validator.validationResult(req);
-
+        if (!errors.isEmpty()) {
+            const errorMessage = `${errors['errors']['0']['msg']}.
+            You entered: ${errors['errors']['0']['value']}`
+            res.status(200).send(errorMessage)
+        }
         https.get(req.body.video_url, response => {
             const redirectedUrl = response.responseUrl
             fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
@@ -81,7 +80,6 @@ exports.video_create_post = [
                     if (err) { return next(err); }
                     if (found_video) {
                         res.send('Found a video with that title and author.');
-                        //console.log('Found a video')
                     }
                     else {
                         video.save(function (err) {
@@ -150,7 +148,6 @@ exports.video_multiadd_post = function (req, res, next) {
                         const async = (async function() {
                             try {
                                 const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
-                                // Successful response!
                                 if (tiktokResponse.status >= 200 && tiktokResponse.status <= 299) {
                                     const tiktokData = await tiktokResponse.json()
                                     if (tiktokData.title === undefined) {
@@ -178,7 +175,6 @@ exports.video_multiadd_post = function (req, res, next) {
                                         })
                                     }    
                                 } else {
-                                    // Unsuccessful response.
                                     const fetchError = `Unsuccessful fetch response: \n
                                     Status: ${tiktokResponse.status} \n
                                     ${tiktokResponse.statusText}`
@@ -191,7 +187,7 @@ exports.video_multiadd_post = function (req, res, next) {
                                 throw new Error(awaitError)
                             }
                         })()
-                    }).on('error', err => { // Unsuccessful get request
+                    }).on('error', err => {
                         console.error(`Unsuccessful get request: ${err}`)
                         return process.exit()
                     })
@@ -211,117 +207,105 @@ exports.video_multiadd_post = function (req, res, next) {
     }
 }
 
-
-// Handle book delete on POST.
 exports.video_delete_post = function(req, res, next) {
     const videos = req.body.deleted_video
     const videoString = videos.toString()
-    const videoid = videoString.split(',')
-    if (videoid === '') {
-        console.log('Please select a video for deletion')
-        res.send('Please select a video for deletion.')
-    } else {
-        Video.remove({'_id' : {$in: videoid}}, function(err) {
-            if(err) { return next(err) }
-            res.redirect('/')
-            console.log(`Deleted ${videoid}`)
+    const videoIds = videoString.split(',')
+    Video.remove({'_id' : {$in: videoIds}},
+    function(error) {
+        if (error) {
+            return next(error)
+        }
+        const previousPage = req.header('referer')
+        res.redirect(previousPage)
+        console.log(`Deleted ${videoIds}`)
     })
-    }
-};
+}
 
 exports.video_search_post = [
-    validator.body('video_search', 'Enter a search term.').trim().escape(),
+    validator.body('video_search').trim().escape()
+    .isLength( {min: 1} ).withMessage('Please enter a search term.'),
     validator.sanitizeBody('video_search'),
     (req, res, next) => {
         const errors = validator.validationResult(req);
-        var video_search = req.body.video_search.toString()
         if (!errors.isEmpty()) {
-            res.render('/', { video_search: video_search, error: errors.array()});
-            return;
-        } else {
-            var regex = new RegExp(video_search, 'gi')
-            Video.find( { $or: [ { title: regex}, { author_name: regex } ] } ).collation( { locale: 'en', strength: 1 } )
-            //( { author_name: regex } )//$or: [ { 'title': video_search }, { 'author_name': video_search } ]})
-                .exec( function(err, found_video) {
-                    if (err) { return next(err); }
-                    if (found_video) {
-                        res.render('video-search', { title: 'Search Results', error: err, found_video: found_video })
-                        console.log(found_video)
-                    } else {
-                        res.send('Did not find a video matching that criteria')
-                    }
-                })
-            }
+            console.error(errors)
+            const errorMessage = `${errors['errors']['0']['msg']}
+            You entered: ${errors['errors']['0']['value']}`
+            res.status(200).send(errorMessage)
         }
-    ]
+        const page = req.params.page
+        const videoQuery = req.body.video_search.toString()
+        const regexQuery = new RegExp(videoQuery, 'gi')
+        app.locals.searchQuery = regexQuery
+        res.redirect(page)
+    }
+]
+
+exports.video_search_get = function(req, res, next) {
+    const page = req.params.page
+    const previousPage = req.header('referer')
+    async.parallel({
+        found_video: function(callback) {
+            Video.find( { $or: [ { title: app.locals.searchQuery},
+                { author_name: app.locals.searchQuery } ] } )
+            .collation( { locale: 'en', strength: 1 } )
+            .limit(videoLimitPerPage)
+            .skip(videoLimitPerPage * (page - 1))
+            .exec(callback)
+        },
+        video_count: function(callback) {
+            Video.find( { $or: [ { title: app.locals.searchQuery},
+                { author_name: app.locals.searchQuery } ] } )
+            .collation( { locale: 'en', strength: 1 } )
+            .countDocuments({}, callback)
+        },
+        previous_page: function(callback) {
+            callback(null, previousPage)
+        },
+        current_page: function(callback) {
+            callback(null, page)
+        },
+        video_limit: function(callback) {
+            callback(null, videoLimitPerPage)
+        },
+    }, function (error, results) {
+        if (error) {
+            return next(error)
+        }
+        res.render('video-search', { title: 'Search Results', error: error, data: results})
+    })
+}
 
 
 exports.video_sort_post = function(req, res, next) {
     const sortOption = req.body.video_sort
-    async.parallel({
-        video_count: function(callback) {
-            Video.countDocuments({}, callback); // Pass an empty object as match condition to find all documents of this collection
-        },
-        list_count: function(callback) {
-            List.countDocuments({}, callback);
-        },
-        video_list: function(callback) {
-            if (sortOption === '') {
-                Video.find({}, 'video_url author_url author_name title date', callback)
-                .limit(15)
-            } else {
-                Video.find({}, 'video_url author_url author_name title date', callback)
-                .limit(15)
-                .sort([[sortOption]])
-                .collation( { locale: 'en', strength: 1 } )
-            }
-        },
-        list_list: function(callback) {
-            List.find({}, 'name', callback)
-            .populate('videos')
-            .collation({locale: "en" })
-            .sort([['name', 'ascending']])
-        }
-    },
-    function(err, results) {
-        res.render('index', { title: 'TikTok Favorites', error: err, data: results });
-    });
-};
+    app.locals.sortVideoOption = sortOption
+    res.redirect('/')
+}
 
 exports.video_move_post = function(req, res, next) {
     const videos = req.body.moved_video
     const videoString = videos.toString()
-    const videoid = videoString.split(',')
-    const destination = req.body.move_destination
-    if (videoid === '') {
-        console.log('Please select a video to move.')
-        res.send('Please select a video to move.')
-    } else if (destination === undefined) {
-        console.log('Please select a destination list.')
-        res.send('Please select a destination list.')
-    } else {
-        // Get the list by the ID
-        List.find( { _id: destination} )
-            .exec( function(err, data) {
-                if (err) { return next(err); }
-                if (data) {
-                    const videoArray = []
-                    for (let i = 0; i < videoid.length; i++) {
-                        if (data[0].videos.includes(videoid[i])) {
-                            console.log('Video already exists in this list.')
+    const videoIds = videoString.split(',')
+    const destinationList = req.body.move_destination
+    List.find( { _id: destinationList} )
+        .exec( function(error, listData) {
+            if (error) {
+                return next(error)
+            }
+            if (listData) {
+                const videosInList = listData[0].videos
+                const addedVideos = videoIds.filter(video => ((videosInList.includes(video)) === false))
+                List.findByIdAndUpdate(destinationList,
+                    { $push: { videos: addedVideos } },
+                    function(error) {
+                        if (error) {
+                            return next(error)
                         }
-                        else {
-                            console.log(`Queued ${videoid[i]} to add to list ${data[0].name}`)
-                            videoArray.push(videoid[i])
-                        }
-                    }
-                    console.log(videoArray)
-                    List.findByIdAndUpdate(destination, { $push: { videos: videoArray } }, function(err) {
-                        if(err) { return next(err) }
-                        res.redirect(`../list/${destination}`)
-                        console.log(`Added ${videoArray.length} video(s) to list ${destination}`)
-                    })
-                }
-            })
-    }
+                    res.redirect(`../list/${destinationList}`)
+                    console.log(`Added ${addedVideos.length} video(s) to list ${destinationList}`)
+                })
+            }
+        })
 }

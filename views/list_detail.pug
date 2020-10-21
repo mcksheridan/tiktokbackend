@@ -13,13 +13,16 @@ block content
       if error
         p.stats Error getting dynamic content.
       else
-        if list.videos.length === 1
-          p.stats #[strong !{list.videos.length}] video in #[strong !{list.name}]
+        if data.current_list.videos.length === 1
+          p.stats #[strong 1] video in #[strong !{data.current_list.name}]
         else
-          p.stats #[strong !{list.videos.length}] videos in #[strong !{list.name}]
+          p.stats #[strong !{data.video_count['videos'].length}] videos in #[strong !{data.current_list.name}]
+            if data.previous_page != undefined
+              br
+              a(href=data.previous_page) Back
 
         div.tiktok-container
-          each video in list.videos
+          each video in data.current_list.videos
             .tiktok-cell
               .tiktok-thumbnail
               .tiktok-grid
@@ -32,3 +35,28 @@ block content
                 .tiktok-grid_play
                   a(href='#', id=video.video_url, class='tiktok-grid_play-button').tiktok-grid_play
                     span.material-icons.tiktok-grid_play launch
+
+        ul.pages
+          if data.current_page != 1
+            li
+              a(href='1')
+                span.material-icons first_page
+          if data.current_page > 5
+            li
+              a(href=parseInt(data.current_page) - 5) -5
+          if data.current_page != 1
+            li
+              a(href=parseInt(data.current_page) - 1)
+                span.material-icons navigate_before
+          li !{data.current_page} of !{Math.ceil(data.video_count['videos'].length/data.video_limit)}
+          if data.current_page != Math.ceil(data.video_count['videos'].length/data.video_limit)
+            li
+              a(href=parseInt(data.current_page) + 1)
+                span.material-icons navigate_next
+          if data.current_page < (Math.ceil(data.video_count['videos'].length/data.video_limit) - 5)
+            li
+              a(href=parseInt(data.current_page) + 5) +5
+          if data.current_page != Math.ceil(data.video_count['videos'].length/data.video_limit)
+            li
+              a(href=Math.ceil(data.video_count['videos'].length/data.video_limit))
+                span.material-icons last_page

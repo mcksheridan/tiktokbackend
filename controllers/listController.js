@@ -4,103 +4,103 @@ var Video = require('../models/video');
 var List = require('../models/bookmarklist');
 
 const validator = require('express-validator');
-const { body,validationResult } = require('express-validator/check');
-const { sanitizeBody } = require('express-validator/filter');
-const { http, https } = require('follow-redirects');
+const https = require('follow-redirects');
 var async = require('async')
 var fetch = require('node-fetch');
 
-// Display list of all bookmark lists.
-//exports.list_list = function(req, res, next) {
-/*    List.find()
-    .populate('videos')
-    .exec(function (err, list_lists) {
-        if (err) {return next(err); }
-        res.render('list_list', { title: 'List of Lists',list_list: list_lists})
-    })*/
-//};
+const express = require('express')
+const app = express()
 
-// Display detail page for a specific bookmark list.
+app.locals.videoLimitPerPage = 15
+const videoLimitPerPage = app.locals.videoLimitPerPage
+
 exports.list_detail = function(req, res, next) {
-    //res.send('NOT IMPLEMENTED: List detail: ' + req.params.id);
-    var id = mongoose.Types.ObjectId(req.params.id);  
+    const id = mongoose.Types.ObjectId(req.params.id)
+    const page = req.params.page
     async.parallel({
-        list_list: function(callback) {
+        list_lists: function(callback) {
             List.find({'_id': {$ne: id}}, callback)
             .collation({locale: "en" })
             .sort([['name', 'ascending']])
         },
-        list: function(callback) {
+        current_list: function(callback) {
             List.findById(id)
             .populate({
                 path: 'videos',
-                //options: { sort: 'author_name', collation: ( { locale: 'en', strength: 1 } )}
+                options: { limit: videoLimitPerPage,
+                    skip: videoLimitPerPage * (page - 1),
+                    sort: app.locals.sortListOption,
+                    collation: ( { locale: 'en', strength: 1 } )}
             })
             .exec(callback);
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
-        if (results.list==null) { // No results.
-            var err = new Error('List not found');
-            err.status = 404;
-            return next(err);
-        }
-        res.render('list_detail', { title: `TikTok Favorites: ${results.list.name}`, list: results.list, list_list: results.list_list, })
-    })
-};
-
-exports.list_sort = function(req, res, next) {
-    const sortOption = req.body.list_sort
-    const id = req.body.list_sort_id
-    async.parallel({
-        list_list: function(callback) {
-            List.find({'_id': {$ne: id}}, callback)
-            .collation({locale: "en" })
-            .sort([['name', 'ascending']])
-        },
-        list: function(callback) {
+        video_count: function(callback) {
             List.findById(id)
-            .populate({
-                path: 'videos',
-                options: { sort: sortOption, collation: ( { locale: 'en', strength: 1 } )}
-            })
-            .exec(callback);
+            .populate('videos')
+            .exec(callback)
         },
-    }, function(err, results) {
-        if (err) { return next(err); }
-        if (results.list==null) { // No results.
-            var err = new Error('List not found');
-            err.status = 404;
-            return next(err);
+        current_page: function(callback) {
+            callback(null, page)
+        },
+        video_limit: function(callback) {
+            callback(null, videoLimitPerPage)
+        },
+        previous_page: function(callback) {
+            const previousPage = req.header('referer')
+            if (previousPage === undefined) {
+                callback(null, undefined)
+            } else {
+                const bookmarkPage = new RegExp(/http:\/\/localhost:3000\/bookmarks\/\d+/)
+                if (previousPage.match(bookmarkPage)) {
+                    callback(null, previousPage)
+                } else {
+                    callback(null, undefined)
+                }
+            }
         }
-        res.render('list_detail', { title: `TikTok Favorites: ${results.list.name}`, list: results.list, list_list: results.list_list, })
+    }, function(error, results) {
+        if (error) {
+            return next(error)
+        }
+        res.render('list_detail', { title: `TikTok Favorites: ${results.current_list.name}`, data: results})
     })
 }
 
-// Handle List create on POST.
+exports.list_sort = function(req, res) {
+    const sortOption = req.body.list_sort
+    app.locals.sortListOption = sortOption
+    const listId = req.body.list_sort_id
+    res.redirect(listId)
+}
+
 exports.list_create_post = [
     validator.body('list_name', 'Please enter a valid name.').trim().escape()
     .isLength( {min: 1, max: 100} ).withMessage('Please enter a name between 1 and 100 characters.'),
-    validator.sanitizeBody('list_name'),
     (req, res, next) => {
         const errors = validator.validationResult(req);
         let listname = { name: req.body.list_name }
         var list = new List(listname)
         if (!errors.isEmpty()) {
-            res.render('/', { list: list, error: errors.array()});
-            return;
+            const errorMessage = `${errors['errors']['0']['msg']}.
+            You entered: ${errors['errors']['0']['value']}`
+            res.status(200).send(errorMessage)
         }
         else {
-            List.findOne({ 'name': req.body.list_name }).collation( { locale: 'en', strength: 1 } )
-            .exec( function(err, found_list) {
-                if(err) { return next(err); }
+            List.findOne({ 'name': req.body.list_name })
+            .collation( { locale: 'en', strength: 1 } )
+            .exec( function(error, found_list) {
+                if(error) {
+                    return next(error)
+                }
                 if (found_list) {
                     console.log('Found a list with that name')
                     res.redirect(found_list._id)
                 }
                 else {
-                    list.save(function (err) {
-                        if (err) { return next(err); }
+                    list.save(function (error) {
+                        if (error) {
+                            return next(error)
+                        }
                         console.log('List added')
                         res.redirect(list._id)
                     })
@@ -111,24 +111,22 @@ exports.list_create_post = [
 ];
 
 exports.list_delete_video_post = function(req, res, next) {
-    //mongoose.Types.ObjectId(req.params.id);  
     const videos = req.body.deleted_video
     const referer = req.header('referer')
     const refererArray = referer.split('/')
     const refererLength = refererArray.length
-    const id = refererArray[refererLength - 1].toString()
+    const listId = refererArray[refererLength - 1].toString()
     const videoString = videos.toString()
-    const videoid = videoString.split(',')
-    if (videoid === '') {
-        console.log('Please select a video for deletion')
-        res.send('Please select a video for deletion.')
-    } else {
-        List.findByIdAndUpdate( { _id: id }, { $pull: { videos: { $in: videoid } } }, function(err) {
-            if(err) { return next(err) }
-            res.redirect(id)
-            console.log(`Deleted ${videoid.length} video(s) to list ${id}`)
-        })
-    }
+    const videoIds = videoString.split(',')
+    List.findByIdAndUpdate( { _id: listId },
+        { $pull: { videos: { $in: videoIds } } },
+        function(error) {
+        if(error) {
+            return next(error)
+        }
+        res.redirect(listId)
+        console.log(`Deleted ${videoIds.length} video(s) to list ${listId}`)
+    })
 }
 
 // Add a video to a specific list POST
@@ -215,51 +213,48 @@ exports.list_add_video_post = [
     }
 ];
 
-// Handle List delete on POST.
 exports.list_delete_post = function(req, res, next) {
     const list = req.body.list_delete
-    List.deleteOne({'_id' : list}, function(err) {
-            if(err) { return next(err) }
+    List.deleteOne({'_id' : list}, function(error) {
+            if(error) {
+                return next(error)
+            }
             res.redirect('/')
             console.log(`Deleted ${list}`)
     })
 };
 
-// Display List update form on GET.
-/* exports.list_update_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: List update GET');
-}; */
-
-// Handle List update on POST.
 exports.list_update_post = [
-    validator.body('list_update', 'Please enter a valid name.').trim().escape()
+    validator.body('list_update').trim().escape()
     .isLength( {min: 1, max: 100} ).withMessage('Please enter a name between 1 and 100 characters.'),
-    validator.sanitizeBody('list_update'),
     (req, res, next) => {
         const errors = validator.validationResult(req);
-        const listname = req.body.list_update
+        const listName = req.body.list_update
         const id = req.body.list_id
         if (!errors.isEmpty()) {
-            res.render(id, { error: errors.array()});
-            return;
-        } else {
-        // Is there already a list with this name?
-        List.findOne({ 'name': listname })
-        .exec( function(err, found_list) {
-            if(err) { return next(err) }
+            const errorMessage = `${errors['errors']['0']['msg']}.
+            You entered: ${errors['errors']['0']['value']}`
+            res.status(200).send(errorMessage)
+        }
+        List.findOne({ 'name': listName })
+        .exec( function(error, found_list) {
+            if(error) {
+                return next(error)
+            }
             if (found_list) {
-                console.log('Found a list with that name')
+                console.log('A list with that name already exists.')
                 res.redirect(`../${found_list._id}`)
             }
             else {
-                List.findByIdAndUpdate(id, { name: listname }, function(err) {
-                    if(err) { return next(err) }
-                    res.redirect(`../${id}`)
-                    console.log(`Changed list name to ${listname}`)
+                List.findByIdAndUpdate(id, { name: listName }, function(error) {
+                    if(error) {
+                        return next(error)
+                    }
+                    const previousPage = req.header('referer')
+                    res.redirect(previousPage)
+                    console.log(`Changed list name to ${listName}`)
                 })
             }
         })
-        // If not, find the list ID and change its name.
-        // let listname = { name: req.body.list_name }
-    }}
+    }
 ];
