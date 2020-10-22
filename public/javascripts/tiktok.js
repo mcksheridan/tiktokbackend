@@ -85,10 +85,6 @@ window.onload = function tiktok() {
     }
     shortenBookmarkListLinkNames()
 
-
-
-    // See the author, title, and checkbox for a video when you hover over a TikTok video.
-
     const showVideoInformation = function () {
         document.addEventListener('mouseover', function(event) {
             const targetClass = event.target.className
@@ -204,12 +200,17 @@ window.onload = function tiktok() {
     function hideForms () {
         popupMessage.style.display = 'none'
         formContent.style.display = 'none'
-        formAddVideo.style.display = 'none'
+        if (formAddVideo) {
+            formAddVideo.setAttribute('display','none')
+        }
         if (formAddList) {
             formAddList.style.display = 'none'
         }
         if (formEditList) {
             formEditList.style.display = 'none'
+        }
+        if (formSortList) {
+            formSortList.style.display = 'none'
         }
         if (formSortVideo) {
             formSortVideo.style.display = 'none'
@@ -280,18 +281,6 @@ window.onload = function tiktok() {
         openPopup()
         formContent.style.display = 'block'
         formAddVideo.style.display = 'block'
-        if (formAddList) {
-            formAddList.style.display = 'none'
-        }
-        if (formEditList) {
-            formEditList.style.display = 'none'
-        }
-        if (formSortList) {
-            formSortList.style.display = 'none'
-        }
-        if (formSortVideo) {
-        formSortVideo.style.display = 'none'
-        }
         const multiaddLink = document.querySelector('.multiadd_help-link')
         const multiaddInfo = document.querySelector('.multiadd_help-info')
         const multiaddInfoClose = document.querySelector('.multiadd_help-info-close')
@@ -312,18 +301,6 @@ window.onload = function tiktok() {
         formContent.style.display = 'block'
         formAddList.style.display = 'block'
         formAddVideo.style.display = 'none'
-        if (formAddVideo) {
-            formAddVideo.style.display = 'none'
-        }
-        if (formEditList) {
-            formEditList.style.display = 'none'
-        }
-        if (formSortList) {
-            formSortList.style.display = 'none'
-        }
-        if (formSortVideo) {
-            formSortVideo.style.display = 'none'
-        }
         document.addEventListener('click', (event) => {
             closePopup(event)
         })
@@ -334,18 +311,7 @@ window.onload = function tiktok() {
             openPopup()
             formContent.style.display = 'block'
             formEditList.style.display = 'block'
-            if (formAddList) {
-                formAddList.style.display = 'none'
-            }
-            if (formAddVideo) {
             formAddVideo.style.display = 'none'
-            }
-            if (formSortList) {
-            formSortList.style.display = 'none'
-            }
-            if (formSortVideo) {
-            formSortVideo.style.display = 'none'
-            }
             const deleteOption = document.querySelector('.form_delete-option')
             const deleteForm = document.querySelector('.form_delete-form')
             deleteOption.addEventListener('click', () => {
@@ -362,18 +328,7 @@ window.onload = function tiktok() {
             openPopup()
             formContent.style.display = 'block'
             formSortList.style.display = 'block'
-            if (formAddList) {
-                formAddList.style.display = 'none'
-            }
-            if (formAddVideo) {
-                formAddVideo.style.display = 'none'
-            }
-            if (formEditList) {
-                formEditList.style.display = 'none'
-            }
-            if (formSortVideo) {
-                formSortVideo.style.display = 'none'
-            }
+            formAddVideo.style.display = 'none'
             document.addEventListener('click', (event) => {
                 closePopup(event)
             })
@@ -385,18 +340,6 @@ window.onload = function tiktok() {
         openPopup()
         formContent.style.dispaly = 'block'
         formSortVideo.style.display = 'block'
-        if (formAddList) {
-        formAddList.style.display = 'none'
-        }
-        if (formAddVideo) {
-        formAddVideo.style.display = 'none'
-        }
-        if (formEditList) {
-        formEditList.style.display = 'none'
-        }
-        if (formSortList) {
-        formSortList.style.display = 'none'
-        }
         document.addEventListener('click', (event) => {
             closePopup(event)
         })

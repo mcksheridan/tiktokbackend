@@ -102,7 +102,8 @@ exports.video_create_post = [
                         ${tiktokResponse.statusText}`
                         res.status(500).send(fetchError)
                     }
-            })()
+            })
+            addOneVideo()
         }).on('error', error => {
             const getError = `Unsuccessful get request: ${error}`
             res.status(500).send(getError)
@@ -199,7 +200,8 @@ exports.video_multiadd_post = function (req, res, next) {
                                 Status: ${status}`
                                 res.status(500).send(awaitError)
                             }
-                        })()
+                        })
+                        addOneVideo()
                     }).on('error', error => {
                         const getError = `Unsuccessful get request: ${error}`
                         res.status(500).send(getError)

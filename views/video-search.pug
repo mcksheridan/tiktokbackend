@@ -1,4 +1,6 @@
 extends header
+include mixins/pages
+include mixins/tiktokContainer
 
 block layout
 
@@ -11,48 +13,12 @@ block layout
 
     div.content
       if error
-        p.stats Error getting dynamic content.
+        p.content_info Error getting dynamic content.
       else
-        p.stats Found #[strong !{data.video_count}] videos
+        p.content_info Found #[strong !{data.video_count}] videos
           br
-          a(href=data.previous_page) Back
+          a(href=data.previous_page, class='content_info_link') Back
 
-        div.tiktok-container
-          each video in data.found_video
-            .tiktok-cell
-              .tiktok-thumbnail
-              .tiktok-grid
-                .tiktok-grid_checkbox
-                  input(type='checkbox', name='checkbox', value=video.id).tiktok-grid_checkbox
-                .tiktok-grid_info
-                  p.tiktok-grid_author
-                    a(href=video.author_url).tiktok-grid_author !{video.author_name}
-                  p.tiktok-grid_title !{video.title}
-                .tiktok-grid_play
-                  a(href='#', id=video.video_url, class='tiktok-grid_play-button').tiktok-grid_play
-                    span.material-icons.tiktok-grid_play launch
+        +tiktokContainer(data.found_video)
 
-        ul.pages
-          if data.current_page != 1
-            li
-              a(href='1')
-                span.material-icons first_page
-          if data.current_page > 5
-            li
-              a(href=parseInt(data.current_page) - 5) -5
-          if data.current_page != 1
-            li
-              a(href=parseInt(data.current_page) - 1)
-                span.material-icons navigate_before
-          li !{data.current_page} of !{Math.ceil(data.video_count/data.video_limit)}
-          if data.current_page != Math.ceil(data.video_count/data.video_limit)
-            li
-              a(href=parseInt(data.current_page) + 1)
-                span.material-icons navigate_next
-          if data.current_page < (Math.ceil(data.video_count/data.video_limit) - 5)
-            li
-              a(href=parseInt(data.current_page) + 5) +5
-          if data.current_page != Math.ceil(data.video_count/data.video_limit)
-            li
-              a(href=Math.ceil(data.video_count/data.video_limit))
-                span.material-icons last_page
+        +pages(data.video_count/data.video_limit)

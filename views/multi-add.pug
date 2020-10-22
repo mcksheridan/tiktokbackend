@@ -6,7 +6,7 @@ form(method='POST' action='/../bookmarks/video/multi-add' enctype='multipart/for
             br
             input.form-control(type='file', name='like_list', required)
             br
-            button(type='submit') Upload List
+            button(type='submit', class='form-group_button') Upload List
         if errors
             ul
             for error in errors
