@@ -12,7 +12,7 @@ div.form-content.form-edit-list
 
     a(href='#' class='form_delete-option') Delete This List
 
-    form(method='POST' action='./:id/delete' class='form_delete-form')
+    form(method='POST' action='../:id/delete' class='form_delete-form')
         div.form-group
             input.form-control(type='hidden', name='list_delete', value=data.current_list._id)
             button(type='submit', class='form-button') Confirm Deletion

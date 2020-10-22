@@ -48,15 +48,18 @@ block content
             li
               a(href=parseInt(data.current_page) - 1)
                 span.material-icons navigate_before
-          li !{data.current_page} of !{Math.ceil(data.video_count['videos'].length/data.video_limit)}
-          if data.current_page != Math.ceil(data.video_count['videos'].length/data.video_limit)
+          if Math.ceil(data.video_count['videos'].length/data.video_limit) <= 1
+            li 1 of 1
+          if Math.ceil(data.video_count['videos'].length/data.video_limit) > 1
+            li !{data.current_page} of !{Math.ceil(data.video_count['videos'].length/data.video_limit)}
+          if data.current_page < Math.ceil(data.video_count['videos'].length/data.video_limit)
             li
               a(href=parseInt(data.current_page) + 1)
                 span.material-icons navigate_next
           if data.current_page < (Math.ceil(data.video_count['videos'].length/data.video_limit) - 5)
             li
               a(href=parseInt(data.current_page) + 5) +5
-          if data.current_page != Math.ceil(data.video_count['videos'].length/data.video_limit)
+          if data.current_page < Math.ceil(data.video_count['videos'].length/data.video_limit)
             li
               a(href=Math.ceil(data.video_count['videos'].length/data.video_limit))
                 span.material-icons last_page

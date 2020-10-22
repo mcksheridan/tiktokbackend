@@ -196,7 +196,9 @@ body {
   color: #fff; }
 
 .tiktok-grid_checkbox {
-  text-align: right; }
+  margin-left: auto;
+  width: 2rem;
+  height: 2rem; }
 
 .tiktok-grid_info {
   text-align: center;
@@ -212,7 +214,8 @@ body {
   max-height: 14.81481vmin; }
 
 .tiktok-grid_author {
-  font-weight: bold; }
+  font-weight: bold;
+  color: #69c9d0; }
 
 .tiktok-grid_play {
   max-width: 33.33333vmin;
@@ -228,6 +231,14 @@ body {
   flex-direction: row;
   justify-content: space-around;
   list-style-type: none;
-  padding-left: 0; }
+  padding-left: 0;
+  font-weight: bold;
+  background-color: black;
+  color: white;
+  padding: 0.25em; }
+
+.pages_link {
+  text-decoration: none;
+  color: white; }
 
 /*# sourceMappingURL=style.css.map */

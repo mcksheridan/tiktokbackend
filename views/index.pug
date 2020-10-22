@@ -83,24 +83,24 @@ html(lang='en')
         ul.pages
           if data.current_page != 1
             li
-              a(href='1')
+              a(href='1', class='pages_link')
                 span.material-icons first_page
           if data.current_page > 5
             li
-              a(href=parseInt(data.current_page) - 5) -5
+              a(href=parseInt(data.current_page) - 5, class='pages_link') -5
           if data.current_page != 1
             li
-              a(href=parseInt(data.current_page) - 1)
+              a(href=parseInt(data.current_page) - 1, class='pages_link')
                 span.material-icons navigate_before
           li !{data.current_page} of !{Math.ceil(data.video_count/data.video_limit)}
           if data.current_page != Math.ceil(data.video_count/data.video_limit)
             li
-              a(href=parseInt(data.current_page) + 1)
+              a(href=parseInt(data.current_page) + 1, class='pages_link')
                 span.material-icons navigate_next
           if data.current_page < (Math.ceil(data.video_count/data.video_limit) - 5)
             li
-              a(href=parseInt(data.current_page) + 5) +5
+              a(href=parseInt(data.current_page) + 5, class='pages_link') +5
           if data.current_page != Math.ceil(data.video_count/data.video_limit)
             li
-              a(href=Math.ceil(data.video_count/data.video_limit))
+              a(href=Math.ceil(data.video_count/data.video_limit), class='pages_link')
                 span.material-icons last_page

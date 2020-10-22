@@ -1,151 +1,186 @@
 window.onload = function tiktok() {
-    // Get the thumbnail art for each video
-    const videoLinks = document.querySelectorAll('a.tiktok-grid_play')
-    const videoImages = document.querySelectorAll('div.tiktok-thumbnail')
 
-    for (let i = 0; i < videoLinks.length; i++) {
-        const url = videoLinks[i].getAttribute('id')
-        fetch(`https://www.tiktok.com/oembed?url=${url}`)
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.thumbnail_url === undefined) {
-                videoImages[i].style.backgroundImage = "url('/../images/videounavailable.jpg')"
-            } else {
-            videoImages[i].style.backgroundImage = `url(${data.thumbnail_url})` }
-        })
+    const getVideoThumbnails = function() {
+        const videoLinksArray = document.querySelectorAll('a.tiktok-grid_play')
+        const videoImagesArray = document.querySelectorAll('div.tiktok-thumbnail')
+        for (let i = 0; i < videoLinksArray.length; i++) {
+            const videoUrl = videoLinksArray[i].getAttribute('id')
+            fetch(`https://www.tiktok.com/oembed?url=${videoUrl}`)
+            .then((tiktokResponse) => tiktokResponse.json())
+            .then((tiktokData) => {
+                if (tiktokData.thumbnail_url === undefined) {
+                    videoImagesArray[i].style.backgroundImage = `url('/../images/videounavailable.jpg')`
+                } else {
+                    videoImagesArray[i].style.backgroundImage = `url(${tiktokData.thumbnail_url})`
+                }
+            })
+        }
     }
+    getVideoThumbnails()
 
-    // View add video option
-    /*const navigationAddVideo = document.querySelector('.navigation_add-video')
-    const addVideo = document.querySelector('#add-video')
-    navigationAddVideo.addEventListener('click', () => {
-        addVideo.style.display = 'block'
-    })*/
+    const navigationLinkList = document.querySelector('.navigation_link-list')
+    const bookmarkListHidden = document.querySelector('.bookmark-list--hidden')
+    const navigationLinkListArrow = document.querySelector('.navigation_link-list-button')
 
-    /*function openWindow (click, window, optionalResponse = undefined, ) {
-        document.querySelector(click).addEventListener('click', () => {
-            if (document.querySelector(window).className === `${window}--hidden`) {
-                // Open the menu
-                window.className = `${window}--shown`
-                click.className = `${click}--expanded`
-                optionalResponse.innerText = 'expand_less'
-            } else { // close by clicking on the element again
-                let bookmarkListShown = document.querySelector('.bookmark-list--shown')
-                let navigationLinkListExpanded = document.querySelector('.navigation_link-list--expanded')
-                if (bookmarkListShown !== null) { // Avoid the type error
-                    bookmarkListShown.className = 'bookmark-list--hidden'
-                    navigationLinkListExpanded.className = 'navigation_link-list'
-                    materialIconsArrow.innerText = 'expand_more'
-            }
-        })
-    }*/
-
-    // Dropdown menu to change bookmark list
-    let navigationLinkList = document.querySelector('.navigation_link-list')
-    let bookmarkListHidden = document.querySelector('.bookmark-list--hidden')
-    let materialIconsArrow = document.querySelector('.navigation_link-list-button')
-
-    function closeMenu () {
-        let bookmarkListShown = document.querySelector('.bookmark-list--shown')
-        let navigationLinkListExpanded = document.querySelector('.navigation_link-list--expanded')
-        if (bookmarkListShown !== null) { // Avoid the type error
+    const closeNavigationLinkList = function () {
+        const bookmarkListShown = document.querySelector('.bookmark-list--shown')
+        const navigationLinkListExpanded = document.querySelector('.navigation_link-list--expanded')
+        if (bookmarkListShown !== null) {
             bookmarkListShown.className = 'bookmark-list--hidden'
             navigationLinkListExpanded.className = 'navigation_link-list'
-            materialIconsArrow.innerText = 'expand_more'
+            navigationLinkListArrow.innerText = 'expand_more'
         }
     }
 
-    if (navigationLinkList) {
-    navigationLinkList.addEventListener('click', () => {
-        if (bookmarkListHidden.className === 'bookmark-list--hidden') {
-            // Open the menu
-            bookmarkListHidden.className = 'bookmark-list--shown'
-            navigationLinkList.className = 'navigation_link-list--expanded'
-            materialIconsArrow.innerText = 'expand_less'
-        } else {
-            closeMenu() // Closed the menu by clicking on the menu arrow
-        }
-    })}
-
-    document.addEventListener('click', (event) => {
-        let targetElement = event.target
-        if (targetElement.parentNode.className === 'bookmark-list_list') {
-            return // Kept the menu open from a menu li option
-        } else if (targetElement.className === 'bookmark-list--shown') {
-            return // Kept the menu open from the padding on the bookmark menu
-        } else if (targetElement.parentNode.className === 'navigation_link-list--expanded') {
-            return // Did not automatically close the menu by clicking on the expand menu arrow
-        } else
-        {
-            closeMenu() // Closed the menu by clicking outside of the menu and outside of the menu arrow
-        }
-    })
-           
-    // Shorten the names of lengthy bookmark list titles in the navigation menu...
-    let navigationLinkListFullTitle = document.querySelector('.navigation_link-list--fulltitle')
-    if (navigationLinkListFullTitle) {
-        if(navigationLinkListFullTitle.innerText.length > 15) {
-        const firstCharacters = navigationLinkListFullTitle.innerText.slice(0, 12)
-        navigationLinkListFullTitle.innerText = `${firstCharacters}...`
-        //console.log(navigationLinkList.slice(0,7))
-    }}
-    // ...and in the dropdown menu
-    let bookmarkListLink = document.querySelectorAll('a.bookmark-list_link')
-    for (let i = 0; i < bookmarkListLink.length; i++) {
-        if(bookmarkListLink[i].innerText.length > 20) {
-            let firstCharacters = bookmarkListLink[i].innerText.slice(0, 20)
-            bookmarkListLink[i].innerText = `${firstCharacters}...`
+    const operateNavigationLinkList = function () {
+        if (navigationLinkList) {
+            navigationLinkList.addEventListener('click', () => {
+                if (bookmarkListHidden.className === 'bookmark-list--hidden') {
+                    // Open the menu
+                    bookmarkListHidden.className = 'bookmark-list--shown'
+                    navigationLinkList.className = 'navigation_link-list--expanded'
+                    navigationLinkListArrow.innerText = 'expand_less'
+                } else {
+                    closeNavigationLinkList() // Closed the menu by clicking on the menu arrow
+                }
+            })
         }
     }
+    operateNavigationLinkList()
+
+    const clickOutsideCloseNavigationLinkList = function () {
+        document.addEventListener('click', (event) => {
+            const targetElement = event.target
+            const targetClass = targetElement.className
+            const targetParentClass = targetElement.parentNode.className
+            if (targetClass === 'bookmark-list--shown' ||
+            targetParentClass === 'bookmark-list_list' ||
+            targetParentClass === 'navigation_link-list--expanded') {
+                return
+            }
+            closeNavigationLinkList()
+        })
+    }
+    clickOutsideCloseNavigationLinkList()
+
+    const shortenNavigationLinkListName = function () {
+        const navigationLinkListFullTitle = document.querySelector('.navigation_link-list--fulltitle')
+        if (navigationLinkListFullTitle &&
+            navigationLinkListFullTitle.innerText.length > 15) {
+                const firstCharacters = navigationLinkListFullTitle.innerText.slice(0, 12)
+                navigationLinkListFullTitle.innerText = `${firstCharacters}...`
+            }
+    }
+    shortenNavigationLinkListName()
+
+    const shortenBookmarkListLinkNames = function () {
+        const bookmarkListLink = document.querySelectorAll('a.bookmark-list_link')
+        for (const listLink of bookmarkListLink) {
+            const listLinkLength = listLink.innerText.length
+            if (listLinkLength > 20) {
+                const firstCharacters = listLink.innerText.slice(0, 20)
+                listLink.innerText = `${firstCharacters}...`
+            }
+        }
+    }
+    shortenBookmarkListLinkNames()
+
+
 
     // See the author, title, and checkbox for a video when you hover over a TikTok video.
 
-    document.addEventListener('mouseover', function(event) {
-        let thumbnail = event.target.parentNode.parentNode.querySelector('.tiktok-thumbnail')
-        let tiktokInfo = event.target.parentNode.parentNode.querySelector('.tiktok-grid_info')
-        let targetClass = event.target.parentNode.className
-        if ((targetClass.startsWith('tiktok-grid'))) {
-            if (thumbnail !== null) {
+    const showVideoInformation = function () {
+        document.addEventListener('mouseover', function(event) {
+            const targetClass = event.target.className
+            function changeCellOpacity(thumbnail, info, mouseout) {
+                console.group()
+                console.log('Target class: '+targetClass)
+                if (targetClass === 'tiktok-grid_play') {
+                    console.log(event.target)
+                }
+                console.log('Thumbnail on mouseout: '+thumbnail.className)
+                console.log('Info on mouseout: '+info.className)
+                console.groupEnd()
                 thumbnail.style.zIndex = '-1'
-                tiktokInfo.style.opacity = '1'
-                console.log(event.target.className)
-        }}
-        else {
-            if (thumbnail !== null) {
-                document.querySelectorAll('.tiktok-thumbnail').forEach(function (thumbnail) {
-                    thumbnail.style.zIndex = '0'
-                })
-                document.querySelectorAll('.tiktok-grid_info').forEach(function (info) {
-                    info.style.opacity = '0'
-                })
-                //document.getElementsByClassName('.tiktok-thumbnail').style.zIndex = '0'
+                info.style.opacity = '1'
+                if (mouseout === true) {
+                    document.addEventListener('mouseout', function(event) {
+                        thumbnail.style.zIndex = '0'
+                        info.style.opacity = '0'
+                    })
+                }
             }
-        }
-    })
-
-    document.addEventListener('mouseout', function(event) {
-        let thumbnail = event.target.parentNode.parentNode.querySelector('.tiktok-thumbnail')
-        let tiktokInfo = event.target.parentNode.parentNode.querySelector('.tiktok-grid_info')
-        let targetClass = event.target.parentNode.className
-        if ((targetClass.startsWith('tiktok-grid')) || (targetClass === 'tiktok-cell') || (targetClass === 'tiktok-container')) {
-            if (thumbnail !== null) {
-                thumbnail.style.zIndex = '0'
-                tiktokInfo.style.opacity = '1'
-                console.log(event.target.className)
+            if (targetClass === 'tiktok-cell') {
+                changeCellOpacity(event.target.children[0],
+                event.target.children[1].children[1],
+                true)
             }
-        }
-        else {
-            if (thumbnail !== null) {
-                document.querySelectorAll('.tiktok-thumbnail').forEach(function (thumbnail) {
-                    thumbnail.style.zIndex = '0'
-                })
-                document.querySelectorAll('.tiktok-grid_info').forEach(function (info) {
-                    info.style.opacity = '0'
-                })
-                //document.getElementsByClassName('.tiktok-thumbnail').style.zIndex = '0'
+            if (targetClass === 'tiktok-thumbnail') {
+                changeCellOpacity(event.target,
+                    event.target.parentNode.children[1].children[1],
+                    true)
             }
-        }
-    })
+            if (targetClass === 'tiktok-grid') {
+                changeCellOpacity(event.target.parentNode.children[0],
+                    event.target.children[1],
+                    true)
+            }
+            if (targetClass === 'tiktok-grid_checkbox') {
+                if (event.target.parentNode.className === 'tiktok-grid') {
+                    changeCellOpacity(event.target.parentNode.children[0],
+                        event.target.parentNode.children[1],
+                        true)
+                }
+                else {
+                    changeCellOpacity(event.target.parentNode.parentNode.parentNode.children[0],
+                        event.target.parentNode.parentNode.children[1],
+                        true)
+                }
+            }
+            if (targetClass === 'tiktok-grid_info') {
+                changeCellOpacity(event.target.parentNode.parentNode.children[0],
+                    event.target,
+                    true)
+            }
+            if (targetClass === 'tiktok-grid_author') {
+                if (event.target.parentNode.className === 'tiktok-grid_info') {
+                    changeCellOpacity(event.target.parentNode.parentNode.parentNode.children[0],
+                        event.target.parentNode,
+                        true)
+                } else {
+                    changeCellOpacity(event.target.parentNode.parentNode.parentNode.parentNode.children[0],
+                        event.target.parentNode.parentNode,
+                        true)
+                }
+            }
+            if (targetClass === 'tiktok-grid_title') {
+                changeCellOpacity(event.target.parentNode.parentNode.parentNode.children[0],
+                    event.target.parentNode,
+                    true)
+            }
+            if (targetClass === 'tiktok-grid_play-button') {
+                changeCellOpacity(event.target.parentNode.parentNode.parentNode.children[0],
+                    event.target.parentNode.parentNode.children[1],
+                    true)
+            }
+            if (targetClass === 'tiktok-grid_play') {
+                if (event.target.parentNode.parentNode.className === 'tiktok-cell') {
+                    changeCellOpacity(event.target.parentNode.parentNode.children[0],
+                        event.target.parentNode.children[1],
+                        true)
+                } else if (event.target.parentNode.parentNode.className === 'tiktok-grid') {
+                    changeCellOpacity(event.target.parentNode.parentNode.parentNode.children[0],
+                        event.target.parentNode.parentNode.children[1],
+                        true)
+                } else {
+                    changeCellOpacity(event.target.parentNode.parentNode.parentNode.parentNode.children[0],
+                        event.target.parentNode.parentNode.parentNode.children[1],
+                        true)
+                }
+            }
+        })
+    }
+    showVideoInformation()
 
     const popup = document.querySelector('.popup')
     const popupClose = document.querySelector('.popup_close-link')
@@ -166,8 +201,7 @@ window.onload = function tiktok() {
     const formSortList = document.querySelector('.form-sort-list')
     const formSortVideo = document.querySelector('.form-sort-video')
 
-    function openPopup () {
-        popup.style.display = 'block'
+    function hideForms () {
         popupMessage.style.display = 'none'
         formContent.style.display = 'none'
         formAddVideo.style.display = 'none'
@@ -181,6 +215,11 @@ window.onload = function tiktok() {
             formSortVideo.style.display = 'none'
         }
         popupForm.style.display = 'none'
+    }
+
+    function openPopup () {
+        popup.style.display = 'block'
+        hideForms()
         popupClose.addEventListener('click', () => {
             popup.style.display = 'none'
         })
@@ -422,15 +461,15 @@ window.onload = function tiktok() {
     if (checkAll) {
     checkAll.addEventListener('click', () => {
         if (checkAll.className.includes('navigation_link-check--unchecked')) {
-            for (let i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].checked = true
+            for (const checkbox of checkboxes) {
+                checkbox.checked = true
             }
             checkAll.innerText = 'check_box_outline_blank'
             checkAll.classList.add('navigation_link-check--checked')
             checkAll.classList.remove('navigation_link-check--unchecked')
         } else {
-            for (let i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].checked = false
+            for (const checkbox of checkboxes) {
+                checkbox.checked = false
             }
             checkboxes.checked = false
             checkAll.innerText = 'check_box'

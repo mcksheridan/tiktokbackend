@@ -1,12 +1,12 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose')
 
-var Video = require('../models/video');
-var List = require('../models/bookmarklist');
+var Video = require('../models/video')
+var List = require('../models/bookmarklist')
 
-const validator = require('express-validator');
-const { https } = require('follow-redirects');
+const validator = require('express-validator')
+const { https } = require('follow-redirects')
 var async = require('async')
-var fetch = require('node-fetch');
+var fetch = require('node-fetch')
 
 const express = require('express')
 const app = express()
@@ -32,7 +32,7 @@ exports.list_detail = function(req, res, next) {
                     sort: app.locals.sortListOption,
                     collation: ( { locale: 'en', strength: 1 } )}
             })
-            .exec(callback);
+            .exec(callback)
         },
         video_count: function(callback) {
             List.findById(id)
@@ -77,7 +77,7 @@ exports.list_create_post = [
     validator.body('list_name', 'Please enter a valid name.').trim().escape()
     .isLength( {min: 1, max: 100} ).withMessage('Please enter a name between 1 and 100 characters.'),
     (req, res, next) => {
-        const errors = validator.validationResult(req);
+        const errors = validator.validationResult(req)
         let listname = { name: req.body.list_name }
         var list = new List(listname)
         if (!errors.isEmpty()) {
@@ -108,7 +108,7 @@ exports.list_create_post = [
             })
         }
     }
-];
+]
 
 exports.list_delete_video_post = function(req, res, next) {
     const videos = req.body.deleted_video
@@ -129,7 +129,6 @@ exports.list_delete_video_post = function(req, res, next) {
     })
 }
 
-// Add a video to a specific list POST
 exports.list_add_video_post = [
     validator.body('video_url', 'Please enter a valid TikTok URL.').trim()
     .isURL( { protocols: ['http','https'], require_protocol: true, } )
@@ -228,7 +227,7 @@ exports.list_add_video_post = [
             res.status(500).send(getError)
         })        
     }
-];
+]
 
 exports.list_delete_post = function(req, res, next) {
     const list = req.body.list_delete
@@ -239,13 +238,13 @@ exports.list_delete_post = function(req, res, next) {
             res.redirect('/')
             console.log(`Deleted ${list}`)
     })
-};
+}
 
 exports.list_update_post = [
     validator.body('list_update').trim().escape()
     .isLength( {min: 1, max: 100} ).withMessage('Please enter a name between 1 and 100 characters.'),
     (req, res, next) => {
-        const errors = validator.validationResult(req);
+        const errors = validator.validationResult(req)
         const listName = req.body.list_update
         const id = req.body.list_id
         if (!errors.isEmpty()) {
@@ -274,4 +273,4 @@ exports.list_update_post = [
             }
         })
     }
-];
+]
