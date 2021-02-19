@@ -1,0 +1,20 @@
+extends header
+block layout
+
+    if messages
+        p !{messages}
+        p !{messages.error}
+
+    form(method='POST' action='/login')
+        div.form-group.login-form
+            label(for='email') Email:
+            input(type='email', name='email', required).login-form_input
+            label(for='password') Password:
+            input(type='password', name='password', required).login-form_input
+            button(type='submit', class='form-button') Login
+
+    p.switch-login-method Don't have an account? 
+        a(href='register', class='switch-login-method_link') Register
+
+    p.switch-login-method Forgot your password? 
+        a(href='forgot-password', class='switch-login-method_link') Reset account

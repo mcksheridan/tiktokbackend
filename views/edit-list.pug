@@ -2,8 +2,8 @@ div.form-content.form-edit-list
       
     form(method='POST' action='../:id/update')
         div.form-group
-            input.form-control(type='text', placeholder=data.current_list.name name='list_update')
-            input.form-control(type='hidden' name='list_id', value=data.current_list._id)
+            input.form-control(type='text', placeholder=data.current_list['name'] name='list_update')
+            input.form-control(type='hidden' name='list_id', value=data.current_list['id'])
             button(type='submit', class='form-button') Change Name
         if errors
             ul
@@ -14,7 +14,7 @@ div.form-content.form-edit-list
 
     form(method='POST' action='../:id/delete' class='form_delete-form')
         div.form-group
-            input.form-control(type='hidden', name='list_delete', value=data.current_list._id)
+            input.form-control(type='hidden', name='list_delete', value=data.current_list['id'])
             button(type='submit', class='form-button') Confirm Deletion
         if errors
             ul

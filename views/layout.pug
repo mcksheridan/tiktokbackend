@@ -12,7 +12,7 @@ block layout
           a(href='#').material-icons.navigation_link.navigation_edit-list edit
         li.navigation_option
           a(href='#').navigation_link-list
-            span.navigation_link-list--fulltitle !{data.current_list.name}
+            span.navigation_link-list--fulltitle !{data.get_list_name}
             span.material-icons.navigation_link.navigation_link-list-button expand_more
         li.navigation_option
           a(href='#').material-icons.navigation_link.navigation_sort-list sort
@@ -23,9 +23,9 @@ block layout
       ul.bookmark-list_list
         li
           a(href=`/../bookmarks/1`).bookmark-list_link All Videos
-        each list in data.list_lists
+        each list in data.get_lists
           li
-            a(href=`/../bookmarks${list.url}`).bookmark-list_link !{list.name}
+            a(href=`/../bookmarks/list/${list.list_id}`).bookmark-list_link !{list.name}
 
     .popup
       p.popup_close

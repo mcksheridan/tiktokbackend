@@ -15,7 +15,6 @@ html(lang='en')
       ul.navigation_list
         li.navigation_option
           a(href='#').material-icons.navigation_link.navigation_add-video library_add
-          //- a(href='/video/create').material-icons.navigation_link library_add
         li.navigation_option
           a(href='#').material-icons.navigation_link.navigation_add-list create_new_folder
         li.navigation_option
@@ -37,9 +36,9 @@ html(lang='en')
 
     .bookmark-list--hidden
       ul.bookmark-list_list
-        each list in data.list_list
+        each list in data.get_lists
           li
-            a(href=`/../bookmarks${list.url}`).bookmark-list_link !{list.name}
+            a(href=`/../bookmarks/list/${list.list_id}`).bookmark-list_link !{list.name}
 
     .popup
       p.popup_close
@@ -48,8 +47,8 @@ html(lang='en')
       p.popup_message
       form.popup_form
         select(name='move_destination', class='form_move-video')
-          each list in data.list_list
-            option(value=`${list._id}`).form_move-video-option !{list.name}
+          each list in data.get_lists
+            option(value=`${list.list_id}`).form_move-video-option !{list.name}
         button(class='popup_form-confirm form-button') Confirm
       include add-video
       include add-list
@@ -64,9 +63,16 @@ html(lang='en')
     
     .content
       if error
-        p.content_info Error getting dynamic content.
+        p.content_info Error getting dynamic content. !{error}
       else
-        p.content_info #[strong !{data.video_count}] videos in #[strong !{data.list_count}] lists
-        +tiktokContainer(data.video_list)
+        p.content_info #[strong !{data.count_videos}] videos in #[strong !{data.get_lists.length}] lists
+        p.content_info Hi, 
+          a(href='#', class='content_info-link content_info-user-account-link') !{data.get_user_info.username}
+          span  (
+            a(href='../logout', class='content_info-link') logout
+          span )
 
-        +pages(data.video_count/data.video_limit)
+          include user-account
+
+        +tiktokContainer(data.get_videos)
+        +pages(data.count_videos/data.pagination['video_limit'])

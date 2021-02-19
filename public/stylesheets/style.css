@@ -5,11 +5,48 @@ body {
   padding: 0px;
   font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif; }
 
+.register {
+  margin-top: 5vh;
+  padding: 2vmin;
+  max-width: 94vw;
+  text-align: center; }
+
+.registration-form, .login-form, .forgot-password-form, .reset-password-form {
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2vmin;
+  max-width: 400px;
+  width: 90vw;
+  border-left: #fe2c55 2px solid;
+  border-top: #69c9d0 2px solid;
+  border-bottom: black 2px solid;
+  border-right: black 2px solid; }
+
+.login-form, .forgot-password-form, .reset-password-form {
+  margin-top: 5vh; }
+
+.registration-form_input, .login-form_input, .forgot-password-form_input, .reset-password-form_input {
+  margin-bottom: 2vh; }
+
+.switch-login-method {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 94vw;
+  text-align: center;
+  margin-top: 2vh; }
+
+.switch-login-method_link {
+  color: #fe2c55; }
+
 .header {
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   line-height: 1rem;
   text-align: center; }
+
+.header_link {
+  color: black;
+  text-decoration: none; }
 
 .navigation_list {
   padding-left: 0;
@@ -25,11 +62,11 @@ body {
   text-align: center; }
 
 .content_info-link {
-  color: #ee15d2; }
+  color: #fe2c55; }
 
 .navigation_link {
   color: black;
-  text-shadow: 0.1rem 0.1rem #ee15d2, -0.15rem -0.15rem #69c9d0;
+  text-shadow: 0.1rem 0.1rem #fe2c55, -0.15rem -0.15rem #69c9d0;
   text-decoration: none;
   font-size: 1.25rem; }
 
@@ -49,7 +86,7 @@ body {
   max-height: 40%;
   overflow: scroll;
   background-color: #fff;
-  border-left: 1px solid #ee15d2;
+  border-left: 1px solid #fe2c55;
   border-top: 1px solid #69c9d0;
   border-right: 1px solid black;
   border-bottom: 1px solid black; }
@@ -76,7 +113,7 @@ body {
 .navigation_search-button {
   padding: 0;
   border: 0px;
-  background-color: black; }
+  background-color: #fe2c55; }
 
 .navigation_search-button .material-icons {
   font-size: 1rem;
@@ -89,12 +126,14 @@ body {
   right: 0;
   margin-left: auto;
   margin-right: auto;
+  min-width: 300px;
   width: 40%;
   background-color: white;
-  border-left: 3px solid #ee15d2;
+  border-left: 3px solid #fe2c55;
   border-top: 3px solid #69c9d0;
   border-right: 3px solid black;
-  border-bottom: 3px solid black; }
+  border-bottom: 3px solid black;
+  box-shadow: 3px 5px rgba(0, 0, 0, 0.2); }
 
 .popup_close, .tiktok-popup_close {
   margin-top: 0;
@@ -115,8 +154,14 @@ body {
 
 .form-button {
   font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif;
-  background-color: #fff;
+  background-color: #fe2c55;
+  color: #fff;
+  border: 0px;
+  font-weight: bold;
   padding: 2%; }
+
+.form-button:active {
+  color: #ccc; }
 
 .form-content {
   padding: 5%;
@@ -181,9 +226,7 @@ body {
   background-color: rgba(0, 0, 0, 0.8);
   position: relative;
   min-width: 33.33333vmin;
-  height: 59.25926vmin;
-  border: 1px solid black;
-  margin-bottom: 0.5rem; }
+  height: 59.25926vmin; }
 
 .tiktok-thumbnail, .tiktok-thumbnail:hover {
   position: absolute;
@@ -235,7 +278,7 @@ body {
   font-size: 3rem;
   padding-left: 0.25rem;
   color: #fff;
-  text-shadow: 0.05rem 0.05rem #ee15d2, -0.05rem -0.05rem #69c9d0;
+  text-shadow: 0.05rem 0.05rem #fe2c55, -0.05rem -0.05rem #69c9d0;
   z-index: 2; }
 
 .pages {
@@ -245,12 +288,34 @@ body {
   list-style-type: none;
   padding-left: 0;
   font-weight: bold;
-  background-color: black;
+  background-color: #fe2c55;
   color: white;
   padding: 0.25em; }
 
 .pages_link {
   text-decoration: none;
   color: white; }
+
+.user-account {
+  display: none;
+  text-align: center;
+  width: 50vw;
+  min-width: 300px;
+  margin-left: auto;
+  margin-right: auto; }
+
+.user-account_navigation {
+  padding-left: 0;
+  list-style-type: none; }
+
+.user-account_navigation-option {
+  margin-bottom: 5vh; }
+
+.user-account_navigation-link {
+  text-decoration: none;
+  color: black; }
+
+.form-change-username, .form-change-password, .form-delete-account {
+  display: none; }
 
 /*# sourceMappingURL=style.css.map */

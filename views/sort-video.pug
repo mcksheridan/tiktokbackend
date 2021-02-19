@@ -4,13 +4,14 @@ div.form-content.form-sort-video
         div.form-group
             label(for='video_sort') Sort Videos By...
             select(name='video_sort' class='video-sort_dropdown')
-                option(value='') Date Added to List (oldest first) (Default)
-                option(value="author_name") Creator Username (A - Z)
-                option(value="-author_name") Creator Username (Z - A)
-                option(value="-date") Date Added (new - old)
-                option(value="date") Date Added (old - new)
-                option(value="title") Video Description (A - Z)
-                option(value="-title") Video Description (Z - A)
+                option(value='date_bookmarked DESC') Date Added to Favorites (new - old) (Default)
+                option(value='date_bookmarked ASC') Date Added to Favorites (old - new)
+                option(value="author_name ASC") Creator Username (A - Z)
+                option(value="author_name DESC") Creator Username (Z - A)
+                option(value="date_added ASC") Date Added to TikTok (old - new)
+                option(value="date_added DESC") Date Added to TikTok (new - old)
+                option(value="title ASC") Video Description (A - Z)
+                option(value="title DESC") Video Description (Z - A)
             button(type='submit', class='form-button') Sort Videos
         if errors
             ul

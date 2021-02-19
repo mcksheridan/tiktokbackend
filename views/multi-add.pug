@@ -6,7 +6,9 @@ form(method='POST' action='/../bookmarks/video/multi-add' enctype='multipart/for
             br
             input.form-control(type='file', name='like_list', required)
             br
-            button(type='submit', class='form-group_button') Upload List
+            button(type='submit', class='form-button form-button_multiadd') Upload List
+            br
+            p Caution: Only works for lists with 250 or fewer videos
         if errors
             ul
             for error in errors

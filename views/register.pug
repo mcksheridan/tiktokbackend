@@ -1,0 +1,17 @@
+extends header
+block layout
+
+    p.register Add your favorite TikTok videos, search your favorites, and organize them into lists. Log in or register to get started!
+
+    form(method='POST' action='/register')
+        div.form-group.registration-form
+            labor(for='email') Email:
+            input(type='email', name='email', required, minlength='5', maxlength='256').registration-form_input
+            label(for='username') Username:
+            input(type='text', name='username', required, minlength='3', maxlength='100').registration-form_input
+            label(for='password') Password:
+            input(type='password', name='password', required, minlength='6', maxlength='100').registration-form_input
+            button(type='submit', class='form-button').registration-form_button Register
+
+    p.switch-login-method Already have an account? 
+        a(href='login', class='switch-login-method_link') Log in

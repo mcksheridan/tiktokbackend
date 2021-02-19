@@ -1,0 +1,45 @@
+div.user-account
+
+    a(href='#', class='user-account_video-return-link') (Return to Videos)
+
+    h2(class='user-account_header') Account Details
+
+    p.user-account_details
+        | #[strong Username]: !{data.get_user_info.username}
+        br
+        | #[strong Member Since]: !{data.get_user_info.created_at}
+
+    ul.user-account_navigation
+        li.user-account_navigation-option
+            a(href='#').user-account_navigation-link.user-account_change-username Change Username
+                span.material-icons.user-account_change-username-arrow expand_more
+            div.form-group.form-change-username  
+                form(method='POST' action='/../bookmarks/user/change-username')
+                    div.form-group
+                        label(for='new_username')
+                        input.form-control(type='text', placeholder=`${data.get_user_info.username}` name='new_username' required)
+                        br
+                        button(type='submit', class='form-button') Change Username
+        li.user-account_navigation-option
+            a(href='#').user-account_navigation-link.user-account_change-password Change Password
+                span.material-icons.user-account_change-password-arrow expand_more
+            div.form-group.form-change-password  
+                form(method='POST' action='/../bookmarks/user/change-password')
+                    div.form-group
+                        labor(for='old_password') Current Password:
+                        input.form-control(type='password', placeholder='' name='old_password')
+                        label(for='new_password') New Password:
+                        input.form-control(type='password', placeholder='' name='new_password')
+                        br
+                        button(type='submit', class='form-button') Change Password
+        li.user-account_navigation-option
+            a(href='#').user-account_navigation-link.user-account_delete-account Delete Account
+                span.material-icons.user-account_delete-account-arrow expand_more
+            p #[strong Warning:] It is impossible to recover deleted accounts!
+            div.form-group.form-delete-account 
+                form(method='POST' action='/../bookmarks/user/delete-account')
+                    div.form-group
+                        label(for='email') Enter Email to Confirm Deletion:
+                        input.form-control(type='email', name='email')
+                        br
+                        button(type='submit', class='form-button') Delete My Account

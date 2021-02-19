@@ -15,14 +15,13 @@ block content
       if error
         p.content_info Error getting dynamic content.
       else
-        if data.current_list.videos.length === 1
-          p.content_info #[strong 1] video in #[strong !{data.current_list.name}]
+        if data.count_videos === 1
+          p.content_info #[strong 1] video in #[strong !{data.current_list['name']}]
         else
-          p.content_info #[strong !{data.video_count['videos'].length}] videos in #[strong !{data.current_list.name}]
-            if data.previous_page != undefined
+          p.content_info #[strong !{data.count_videos}] videos in #[strong !{data.current_list['name']}]
+            if data.pagination['previous_page'] != undefined
               br
-              a(href=data.previous_page, class='content_info-link') Back
+              a(href=data.pagination['previous_page'], class='content_info-link') Back
 
-        +tiktokContainer(data.current_list.videos)
-
-        +pages(data.video_count['videos'].length/data.video_limit)
+        +tiktokContainer(data.get_videos)
+        +pages(data.count_videos/data.pagination['video_limit'])

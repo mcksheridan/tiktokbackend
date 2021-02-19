@@ -89,14 +89,6 @@ window.onload = function tiktok() {
         document.addEventListener('mouseover', function(event) {
             const targetClass = event.target.className
             function changeCellOpacity(thumbnail, info, mouseout) {
-                console.group()
-                console.log('Target class: '+targetClass)
-                if (targetClass === 'tiktok-grid_play') {
-                    console.log(event.target)
-                }
-                console.log('Thumbnail on mouseout: '+thumbnail.className)
-                console.log('Info on mouseout: '+info.className)
-                console.groupEnd()
                 thumbnail.style.zIndex = '-1'
                 info.style.opacity = '1'
                 if (mouseout === true) {
@@ -420,5 +412,55 @@ window.onload = function tiktok() {
             checkAll.classList.remove('navigation_link-check--checked')
         }
     })}
+
+    const userAccount = document.querySelector('.user-account')
+    const tiktokContainer = document.querySelector('.tiktok-container')
+    const userAccountLink = document.querySelector('.content_info-user-account-link')
+    const videoReturnLink = document.querySelector('.user-account_video-return-link')
+
+    const showUserAccount = () => {
+        userAccountLink.addEventListener('click', () => {
+            tiktokContainer.style.display = 'none'
+            userAccount.style.display = 'block'
+        })
+    }
+    showUserAccount()
+
+    const hideUserAccount = () => {
+        videoReturnLink.addEventListener('click', () => {
+            userAccount.style.display = 'none'
+            tiktokContainer.style.display = 'grid'
+        })
+    }
+    hideUserAccount()
+
+    const showUserAccountForm = (action) => {
+        const arrowDirection = document.querySelector(`.user-account_${action}-arrow`)
+        if (arrowDirection.innerText === 'expand_more') {
+            document.querySelector(`.user-account_${action}`).addEventListener('click', () => {
+                document.querySelector(`.form-${action}`).style.display = 'block'
+                document.querySelector(`.user-account_${action}-arrow`).innerText = 'expand_less'
+            })
+        }
+    }
+
+    showUserAccountForm('change-username')
+    showUserAccountForm('change-password')
+    showUserAccountForm('delete-account')
+
+    const hideUserAccountForm = (action) => {
+        const arrowDirection = document.querySelector(`.user-account_${action}-arrow`)
+        if (arrowDirection.innerText === 'expand_less') {
+            document.querySelector(`.user-account_${action}`).addEventListener('click', () => {
+                console.log('something')
+                document.querySelector(`.form-${action}`).style.display = 'none'
+                document.querySelector(`.user-account_${action}-arrow`).innerText = 'expand_more'
+            })
+        }
+    }
+
+    hideUserAccountForm('change-username')
+    hideUserAccountForm('change-password')
+    hideUserAccountForm('delete-account')
 
 }

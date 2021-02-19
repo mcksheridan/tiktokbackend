@@ -3,7 +3,8 @@ div.form-content.form-add-video
     form(method='POST' action='/../bookmarks/video/add')
         div.form-group
             label(for='video_url')
-            input#video_url.form-control(type='text', placeholder='TikTok URL' name='video_url' value=(undefined===video ? '' : video.name))
+            input#video_url.form-control(type='url', placeholder='TikTok URL' name='video_url',
+            pattern='https://.+', title='Please enter a TikTok URL beginning with "https://"', required)
             br
             button(type='submit', class='form-button') Add Video
         if errors

@@ -15,10 +15,10 @@ block layout
       if error
         p.content_info Error getting dynamic content.
       else
-        p.content_info Found #[strong !{data.video_count}] videos
+        p.content_info Found #[strong !{data.count_videos}] videos
           br
-          a(href=data.previous_page, class='content_info_link') Back
+          a(href=data.pagination['previous_page'], class='content_info-link') Back
 
-        +tiktokContainer(data.found_video)
+        +tiktokContainer(data.get_videos)
 
-        +pages(data.video_count/data.video_limit)
+        +pages(data.count_videos/data.pagination['video_limit'])

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap')
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons')
 
-$tiktokred: #ee15d2
+$tiktokred: #fe2c55 // #ee15d2
 $tiktokblue: #69c9d0
 $tiktoksize: (100vmin / 3)
 
@@ -11,11 +11,64 @@ body
   padding: 0px
   font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif
 
+.register
+  margin-top: 5vh
+  padding: 2vmin
+  max-width: 94vw
+  text-align: center
+
+.registration-form
+  margin-left: auto
+  margin-right: auto
+  padding: 2vmin
+  max-width: 400px
+  width: 90vw
+  border-left: $tiktokred 2px solid
+  border-top: $tiktokblue 2px solid
+  border-bottom: black 2px solid
+  border-right: black 2px solid
+
+.login-form
+  @extend .registration-form
+  margin-top: 5vh
+
+.forgot-password-form
+  @extend .login-form
+
+.reset-password-form
+  @extend .login-form
+
+.registration-form_input
+  margin-bottom: 2vh
+
+.login-form_input
+  @extend .registration-form_input
+
+.forgot-password-form_input
+  @extend .login-form_input
+
+.reset-password-form_input
+  @extend .login-form_input
+
+.switch-login-method
+  margin-left: auto
+  margin-right: auto
+  max-width: 94vw
+  text-align: center
+  margin-top: 2vh
+
+.switch-login-method_link
+  color: $tiktokred
+
 .header
   font-family: 'Montserrat', sans-serif
   font-size: 1rem
   line-height: 1rem
   text-align: center
+
+.header_link
+  color: black
+  text-decoration: none
 
 .navigation_list
   padding-left: 0
@@ -85,7 +138,7 @@ body
 .navigation_search-button
   padding: 0
   border: 0px
-  background-color: black
+  background-color: $tiktokred
 
 .navigation_search-button .material-icons
   font-size: 1rem
@@ -98,12 +151,14 @@ body
   right: 0
   margin-left: auto
   margin-right: auto
+  min-width: 300px
   width: 40%
   background-color: white
   border-left: 3px solid $tiktokred
   border-top: 3px solid $tiktokblue
   border-right: 3px solid black
   border-bottom: 3px solid black
+  box-shadow: 3px 5px rgba(0,0,0,0.2)
 
 .popup_close
   margin-top: 0
@@ -124,8 +179,14 @@ body
 
 .form-button
   font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif
-  background-color: #fff
+  background-color: $tiktokred
+  color: #fff
+  border: 0px
+  font-weight: bold
   padding: 2%
+
+.form-button:active
+  color: #ccc
 
 .form-content
   padding: 5%
@@ -199,8 +260,8 @@ body
   min-width: $tiktoksize
   height: (($tiktoksize * 1280) / 720)
   //line-height: 0px
-  border: 1px solid black
-  margin-bottom: 0.5rem
+  //border: 1px solid black
+  //margin-bottom: 0.5rem
 
 .tiktok-thumbnail
   position: absolute
@@ -263,10 +324,38 @@ body
   list-style-type: none
   padding-left: 0
   font-weight: bold
-  background-color: black
+  background-color: $tiktokred
   color: white
   padding: 0.25em
 
 .pages_link
   text-decoration: none
   color: white
+
+.user-account
+  display: none
+  text-align: center
+  width: 50vw;
+  min-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+
+.user-account_navigation
+  padding-left: 0
+  list-style-type: none
+
+.user-account_navigation-option
+  margin-bottom: 5vh
+
+.user-account_navigation-link
+  text-decoration: none
+  color: black
+
+.form-change-username
+  display: none
+
+.form-change-password
+  @extend .form-change-username
+
+.form-delete-account
+  @extend .form-change-username

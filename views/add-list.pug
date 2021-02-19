@@ -3,7 +3,7 @@ div.form-content.form-add-list
     form(method='POST' action='./list/create')
         div.form-group
             label(for='list_name')
-            input#video_url.form-control(type='text', placeholder='List name' name='list_name' value=(undefined===list ? '' : list.name))
+            input#video_url.form-control(type='text', placeholder='List name', name='list_name', required, minlength='1', maxlength='100')
             button(type='submit', class='form-button') Add List
         if errors
             ul

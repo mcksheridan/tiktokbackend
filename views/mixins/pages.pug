@@ -1,28 +1,28 @@
 mixin pages(lastPage)
     ul.pages
-        if data.current_page != 1
+        if data.pagination['current_page'] != 1
             li
                 a(href='1', class='pages_link')
                     span.material-icons first_page
-        if data.current_page > 5
+        if data.pagination['current_page'] > 5
             li
-                a(href=parseInt(data.current_page) - 5, class='pages_link') -5
-        if data.current_page != 1
+                a(href=parseInt(data.pagination['current_page']) - 5, class='pages_link') -5
+        if data.pagination['current_page'] != 1
             li
-                a(href=parseInt(data.current_page) - 1, class='pages_link')
+                a(href=parseInt(data.pagination['current_page']) - 1, class='pages_link')
                     span.material-icons navigate_before
         if Math.ceil(lastPage) <= 1
             li 1 of 1
         if Math.ceil(lastPage) > 1
-            li !{data.current_page} of !{Math.ceil(lastPage)}
-        if data.current_page < Math.ceil(lastPage)
+            li !{data.pagination['current_page']} of !{Math.ceil(lastPage)}
+        if data.pagination['current_page'] < Math.ceil(lastPage)
             li
-                a(href=(parseInt(data.current_page) + 1), class='pages_link')
+                a(href=(parseInt(data.pagination['current_page']) + 1), class='pages_link')
                     span.material-icons navigate_next
-        if data.current_page < ((lastPage) - 5)
+        if data.pagination['current_page'] < ((lastPage) - 5)
             li
-                a(href=parseInt(data.current_page) + 5, class='pages_link') +5
-        if data.current_page < Math.ceil(lastPage)
+                a(href=parseInt(data.pagination['current_page']) + 5, class='pages_link') +5
+        if data.pagination['current_page'] < Math.ceil(lastPage)
             li
                 a(href=Math.ceil(lastPage), class='pages_link')
                     span.material-icons last_page

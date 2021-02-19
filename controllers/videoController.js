@@ -1,44 +1,121 @@
-var Video = require('../models/video');
-var List = require('../models/bookmarklist');
+//const Video = require('../models/video')
+//const List = require('../models/bookmarklist')
+//const User = require('../models/users')
+const db = require('../db')
 
-const validator = require('express-validator');
-const { https } = require('follow-redirects');
+const validator = require('express-validator')
+const { https } = require('follow-redirects')
 const fs = require('fs')
+const BigNumber = require('big-number')
 
 const express = require('express')
 const app = express()
 
-const async = require('async');
-const fetch = require('node-fetch');
+const async = require('async')
+const fetch = require('node-fetch')
 
 app.locals.videoLimitPerPage = 15
 const videoLimitPerPage = app.locals.videoLimitPerPage
 
-exports.index = function(req, res) { 
-    const page = req.params.page  
+exports.index = (req, res) => {
+    const page = parseInt(req.params.page)
+    const values = [req.user.user_id]
     async.parallel({
-        video_count: function(callback) {
-            Video.countDocuments({}, callback);
+        pagination: (callback) => {
+            const pagination = {
+                'current_page': page,
+                'video_limit': videoLimitPerPage,
+            }
+            callback(null, pagination)
         },
-        list_count: function(callback) {
-            List.countDocuments({}, callback);
+        get_lists: (callback) => {
+            const listLists = async () => {
+                const text = 'SELECT * FROM lists WHERE user_id = $1 ORDER BY lower(name)'
+                try {
+                    const listQuery = await db.query(text, values)
+                    const listQueryResults = listQuery.rows
+                    callback(null, listQueryResults)
+                } catch(error) {
+                    res.status(500).send(error.stack)
+                }
+            }
+            listLists()
         },
-        video_list: function(callback) {
-            Video.find({}, 'video_url author_url author_name title date', callback)
-            .limit(videoLimitPerPage)
-            .skip(videoLimitPerPage * (page - 1))
-            .sort(app.locals.sortVideoOption)
+        get_videos: (callback) => {
+            const getSortOption = (userInput) => {
+                if (userInput === undefined) {
+                    return 'date_bookmarked DESC'
+                }
+                return userInput
+            }
+            const checkCaseSensitivity = () => {
+                const startsWithDate = (getSortOption(app.locals.sortVideoOption)).startsWith('date')
+                if (startsWithDate) {
+                    getVideosCaseInsensitive()
+                } else {
+                    const sortOptionArray = app.locals.sortVideoOption.split(' ')
+                    const sortColumn = sortOptionArray[0]
+                    const sortDirection = sortOptionArray[1]
+                    getVideosCaseSensitive(sortColumn, sortDirection)
+                }
+            }
+            const getVideos = async (text) => {
+                try {
+                    const videoQuery = await db.query(text, values)
+                    const videoQueryResults = videoQuery.rows
+                    callback(null, videoQueryResults)
+                } catch(error) {
+                    res.status(500).send(error.stack)
+                }
+            }
+            const getVideosCaseInsensitive = () => {
+                const text = `SELECT users_videos.video_id, url, title, author_url, author_name, date_added, date_bookmarked FROM users_videos
+                INNER JOIN videos
+                ON videos.video_id = users_videos.video_id
+                WHERE users_videos.user_id = $1
+                ORDER BY ${getSortOption(app.locals.sortVideoOption)}
+                LIMIT ${videoLimitPerPage}
+                OFFSET ${videoLimitPerPage * (page - 1)}`
+                getVideos(text)
+            }
+            const getVideosCaseSensitive = (column, direction) => {
+                const text = `SELECT users_videos.video_id, url, title, author_url, author_name, date_added, date_bookmarked FROM users_videos
+                INNER JOIN videos
+                ON videos.video_id = users_videos.video_id
+                WHERE users_videos.user_id = $1
+                ORDER BY lower(${column}) ${direction}
+                LIMIT ${videoLimitPerPage}
+                OFFSET ${videoLimitPerPage * (page - 1)}`
+                getVideos(text)
+            }
+            checkCaseSensitivity()
         },
-        current_page: function(callback) {
-            callback(null, page)
+        count_videos: (callback) => {
+            const countVideos = async () => {
+                const text = 'SELECT * FROM users_videos WHERE user_id = $1'
+                try {
+                    const videoQuery = await db.query(text, values)
+                    const videoQueryResults = videoQuery.rows.length
+                    callback(null, videoQueryResults)
+                } catch(error) {
+                    res.status(500).send(error.stack)
+                }
+            }
+            countVideos()
         },
-        video_limit: function(callback) {
-            callback(null, videoLimitPerPage)
-        },
-        list_list: function(callback) {
-            List.find({}, 'name', callback)
-            .collation({locale: "en" })
-            .sort([['name', 'ascending']])
+        get_user_info: (callback) => {
+            const getUserInfo = async () => {
+                const text = 'SELECT * FROM users WHERE user_id = $1'
+                try {
+                    const userQuery = await db.query(text, values)
+                    const userQueryResults = userQuery.rows[0]
+                    callback(null, userQueryResults)
+                }
+                catch(error) {
+                    res.status(500).send(error.stack)
+                }
+            }
+            getUserInfo()
         }
     },
     function(err, results) {
@@ -52,207 +129,528 @@ exports.video_create_post = [
     .withMessage('Please enter a valid TikTok URL beginning with https://')
     .contains('tiktok.com', { ignoreCase: true })
     .withMessage('Please enter a URL from TikTok.com'),
-    validator.sanitizeBody('video_url'),
+    validator.body('video_url'),
     (req, res, next) => {
-        const errors = validator.validationResult(req);
+        const errors = validator.validationResult(req)
         if (!errors.isEmpty()) {
             const errorMessage = `${errors['errors']['0']['msg']}.
             You entered: ${errors['errors']['0']['value']}`
             res.status(200).send(errorMessage)
         }
-        https.get(req.body.video_url, response => {
-            const redirectedUrl = response.responseUrl
-            const addOneVideo = (async function() {
+        async.waterfall([
+            function getRedirect (callback) {
+                https.get(req.body.video_url, response => {
+                    const redirectedUrl = response.responseUrl
+                    callback(null, redirectedUrl)
+                })
+            },
+            function (redirectedUrl, callback) {
+                const getTiktokData = (async () => {
                     const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
                     if (tiktokResponse.status >= 200 && tiktokResponse.status <= 299) {
                         const tiktokData = await tiktokResponse.json()
-                        if (tiktokData.title === undefined) {
-                            const videoUnavailableMessage = 'This video is unavailable. It may have been deleted.'
-                            res.status(200).send(videoUnavailableMessage)
-                        } else {
-                            let videodetail = { video_url: redirectedUrl }
-                            videodetail.title = tiktokData.title
-                            videodetail.author_url = tiktokData.author_url
-                            videodetail.author_name = tiktokData.author_name
-                            const video = new Video(videodetail)
-                            Video.findOne( {'title': videodetail.title, 'author_name': videodetail.author_name })
-                            .exec(function (error, found_video) {
-                                if (error) {
-                                    return next(error)
-                                }
-                                if (found_video) {
-                                    const foundVideoMessage = `A video by ${videodetail.author_name}
-                                    called ${videodetail.title} already exists.`
-                                    res.status('200').send(foundVideoMessage)
-                                } else {
-                                    video.save(function (error) {
-                                        if (error) {
-                                            return next(error)
-                                        }
-                                        console.log(`Video by ${videodetail.author_name}
-                                        called ${videodetail.title} added!`)
-                                        res.redirect('/')
-                                    })
-                                }
-                            })
-                        }    
+                        callback(null, redirectedUrl, tiktokData)
                     } else {
+                        // NOTE: Change to a flash message!!
                         const fetchError = `Unsuccessful fetch response: \n
                         Status: ${tiktokResponse.status} \n
                         ${tiktokResponse.statusText}`
                         res.status(500).send(fetchError)
                     }
-            })
-            addOneVideo()
-        }).on('error', error => {
-            const getError = `Unsuccessful get request: ${error}`
-            res.status(500).send(getError)
-        })        
+                })
+                getTiktokData()
+            },
+            function checkDataValidity (redirectedUrl, tiktokData, callback) {
+                if (tiktokData.title === undefined) {
+                    // NOTE: Change to a flash message!
+                    const videoUnavailableMessage = 'This video is unavailable. It may have been deleted.'
+                    res.status(200).send(videoUnavailableMessage)
+                } else {
+                    callback(null, redirectedUrl, tiktokData)
+                }
+            },
+            function saveValidatedData (redirectedUrl, tiktokData, callback) {
+                const newVideo = {
+                    url:  redirectedUrl,
+                    title: tiktokData.title,
+                    authorUrl: tiktokData.author_url,
+                    authorName: tiktokData.author_name
+                }
+                callback(null, redirectedUrl, newVideo)
+            },
+            function getTiktokId (redirectedUrl, newVideo, callback) {
+                const idRegexPattern = new RegExp(/\d+/)
+                if (redirectedUrl.startsWith('https://m')) {
+                    const tiktokIdArray = redirectedUrl.match(idRegexPattern)
+                    const tiktokId = tiktokIdArray[0]
+                    callback(null, newVideo, tiktokId)
+                }
+                if (redirectedUrl.startsWith('https://www')) {
+                    const videoRegexPattern = new RegExp(/video\/\d+/)
+                    const tiktokVideoPattern = redirectedUrl.match(videoRegexPattern)
+                    const tiktokVideoString = tiktokVideoPattern.toString()
+                    const tiktokIdArray = tiktokVideoString.match(idRegexPattern)
+                    const tiktokId = tiktokIdArray[0]
+                    callback(null, newVideo, tiktokId)
+                }
+            },
+            function checkUsersVideosForDuplicates (newVideo, tiktokId, callback) {
+                const checkUsersVideosForDuplicates = async () => {
+                    const text = 'SELECT * FROM users_videos WHERE user_id = $1 AND video_id = $2'
+                    const values = [req.user.user_id, tiktokId]
+                    try {
+                        const videoQuery = await db.query(text, values)
+                        const videoQueryResults = videoQuery.rows
+                        if (videoQueryResults.length > 0) {
+                            const foundVideoMessage = `A video with id ${tiktokId} already exists in this account.`
+                            // Note: Change to a flash message!
+                            res.status(200).send(foundVideoMessage)
+                        }
+                        callback(null, newVideo, tiktokId)
+                    } catch (error) {
+                        res.status(500).send(error.stack)
+                    }
+                }
+                checkUsersVideosForDuplicates()
+            },
+            function checkAllVideosForDuplicates (newVideo, tiktokId, callback) {
+                const checkAllVideosForDuplicates = async () => {
+                    const text = 'SELECT * FROM videos WHERE video_id = $1'
+                    const values = [tiktokId]
+                    try {
+                        const videoQuery = await db.query(text, values)
+                        const videoQueryResults = videoQuery.rows
+                        if (videoQueryResults.length > 0) {
+                            const addVideoToUsersVideos = async () => {
+                                try {
+                                    await db.query('INSERT INTO users_videos VALUES($1, $2)',
+                                    [req.user.user_id, tiktokId])
+                                    res.redirect('/')
+                                } catch(error) {
+                                    res.status(500).send(error.stack)
+                                }
+                            }
+                            addVideoToUsersVideos()
+                        }
+                        callback(null, newVideo, tiktokId)
+                    } catch(error) {
+                        res.status(500).send(error.stack)
+                    }
+                }
+                checkAllVideosForDuplicates()
+            },
+            function getBinaryId (newVideo, tiktokId, callback) {
+                const tiktokIdBigIntBinaryArray = []
+                const tiktokIdInteger = BigNumber(tiktokId)
+                let currentInteger = tiktokIdInteger
+                while (currentInteger > BigNumber(0)) {
+                    let remainder = BigNumber(currentInteger).mod(2)
+                    let remainderString = remainder.toString()
+                    tiktokIdBigIntBinaryArray.unshift(remainderString)
+                    currentInteger = BigNumber(currentInteger).div(2)
+                    if (currentInteger == 0) {
+                        const currentIntegerString = currentInteger.toString()
+                        tiktokIdBigIntBinaryArray.unshift(currentIntegerString)
+                    }
+                }
+                callback(null, newVideo, tiktokId, tiktokIdBigIntBinaryArray)
+            },
+            function getThirtyTwoLeftBits (newVideo, tiktokId, tiktokIdBigIntBinaryArray, callback) {
+                const tiktokIdBinaryArray = tiktokIdBigIntBinaryArray.map(number => parseInt(number))
+                const tiktokIdBinaryString = tiktokIdBinaryArray.join('')
+                const thirtyTwoLeftBits = tiktokIdBinaryString.slice(0,32)
+                callback(null, newVideo, tiktokId, thirtyTwoLeftBits)
+            },
+            function getDecimalFromBits (newVideo, tiktokId, thirtyTwoLeftBits, callback) {
+                const decimalArray = []
+                let arrayPlace = 0
+                let previousValue = 0
+                while (arrayPlace < 32) {
+                    let valueTotal = previousValue * 2
+                    let bitAsInteger = parseInt(thirtyTwoLeftBits[arrayPlace])
+                    let newTotal = bitAsInteger + valueTotal
+                    decimalArray[0] = newTotal
+                    previousValue = newTotal
+                    arrayPlace += 1
+                }
+                const decimal = decimalArray.toString()
+                callback(null, newVideo, tiktokId, decimal)
+            },
+            function getDateAdded (newVideo, tiktokId, decimal, callback) {
+                const dateAdded = new Date(decimal * 1000)
+                console.log('Data from get date added:')
+                console.log(newVideo)
+                callback(null, newVideo, tiktokId, dateAdded)
+            },
+            function saveIdAndDateAdded (newVideo, tiktokId, dateAdded, callback) {
+                newVideo.id = tiktokId
+                newVideo.dateAdded = dateAdded
+                callback(null, newVideo)
+            },
+            function addVideo (newVideo, callback) {
+                const addVideo = async () => {
+                    try {
+                        await db.query('BEGIN')
+                        const insertVideoText = 'INSERT INTO videos VALUES($1, $2, $3, $4, $5, $6)'
+                        const insertVideoValues = [newVideo.id, newVideo.url, newVideo.title,
+                            newVideo.authorUrl, newVideo.authorName, newVideo.dateAdded]
+                        await db.query(insertVideoText, insertVideoValues)
+                        const insertReferenceText = 'INSERT INTO users_videos VALUES($1, $2)'
+                        const insertReferenceValues = [req.user.user_id, newVideo.id]
+                        await db.query(insertReferenceText, insertReferenceValues)
+                        await db.query('COMMIT')
+                        res.redirect('/')
+                    }
+                    catch(error) {
+                        await db.query('ROLLBACK')
+                        res.send(500).status(error)
+                    }
+                }
+                addVideo()
+            }
+        ])      
     }
 ]
 
 exports.video_multiadd_post = function (req, res, next) {
-    if (req.file === undefined) {
-        res.send('Please upload a valid "Like List.txt" file.')
-    } else {
-        const data = fs.readFileSync(req.file.path, 'UTF-8')
-        fs.unlinkSync(req.file.path)
-        const regexCheck = new RegExp(/[^A-z0-9\s:\-/.]/)
-        // If the data includes invalid characters, send an error to the user
-        if (data.match(regexCheck)) {
-            res.send('Your file contains invalid characters. Please upload your Like List file.')
-        }
-        else if (data === '') {
-            res.send('Your Like List is empty.')
-        } else {
-            // Create a for loop with regular expressions to go through each entry
-            const regexSort = new RegExp(/Date: \d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d\sVideo Link: https:\/\/www.tiktokv.com\/share\/video\/\d*\//, 'g')
-            const dateVideoArray = data.match(regexSort)
-            const dateMatch = new RegExp(/\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d/)
-            const videoMatch = new RegExp(/https:\/\/www.tiktokv.com\/share\/video\/\d*\//)
-            const arrayLength = dateVideoArray.length
-            let videoCount = 0
-            function delay(times) {
-                if (times < 1) {
-                    console.log('All available, non-duplicate videos added.')
+    // Note: Add a flash message to let users know that adding multiple videos takes time.
+    // Note: Add intermittent flash messages that let users know how many videos there are left to process.
+    async.waterfall([
+        function checkFileValidity (callback) {
+            if (req.file === undefined) {
+                // Note: Change to a flash message!
+                res.send('Please upload a valid "Like List.txt file.')
+            } else {
+                const likeList = fs.readFileSync(req.file.path, 'UTF-8')
+                fs.unlinkSync(req.file.path)
+                callback(null, likeList)
+            }
+        },
+        function checkFileData (likeList, callback) {
+            const regexCheck = new RegExp(/[^A-z0-9\s:\-/.]/)
+            if (likeList === '') {
+                // Note: Change to a flash message!
+                res.send('Your Like List is empty.')
+            }
+            if (likeList.match(regexCheck)) {
+                // Note: Change to a flash message!
+                res.send('Your file contains invalid characters. Please upload your Like List file.')
+            } else {
+                callback(null, likeList)
+            }
+        },
+        function addAllVideos (likeList, callback) {
+            const videoDatePattern = new RegExp
+            (/Date: \d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d\sVideo Link: https:\/\/www.tiktokv.com\/share\/video\/\d*\//, 'g')
+            const dateVideoArray = likeList.match(videoDatePattern)
+            const datePattern = new RegExp(/\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d/)
+            const videoPattern = new RegExp(/https:\/\/www.tiktokv.com\/share\/video\/\d*\//)
+            const totalVideoNumber = dateVideoArray.length
+            let videosProcessed = 0
+            function delayNextVideo(videosRemaining) {
+                const availableVideosAllAdded = () => {
+                    if (videosRemaining === 1) {
+                        console.log('All available, non-duplicate videos have been added.')
+                        res.redirect('/')
+                    }
                 }
                 setTimeout(() => {
                     try {
-                    if (videoCount < arrayLength) {
-                    const dateVideo = dateVideoArray[videoCount]
-                    const videoArray = dateVideo.match(videoMatch)
-                    const dateArray = dateVideo.match(dateMatch)
-                    const newVideo = videoArray.toString()
-                    const newVideoPath = newVideo.slice(23, newVideo.length).toString()
-                    const newDate = dateArray.toString()
-                    const options = {
-                        host: 'www.tiktokv.com',
-                        path: newVideoPath,
-                        port: 443,
-                        family: 4,
-                        method: 'GET',
-                        timeout: 3000,
-                    }
-                    https.get(options, response => {
-                        const redirectedUrl = response.responseUrl
-                        const addOneVideo = (async function() {
-                            try {
-                                const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
-                                if (tiktokResponse.status >= 200 && tiktokResponse.status <= 299) {
-                                    const tiktokData = await tiktokResponse.json()
+                        if (videosProcessed < totalVideoNumber) {
+                            async.waterfall([
+                                function getTikTokFromArray (callback) {
+                                    const currentDateAndVideo = dateVideoArray[videosProcessed]
+                                    const currentDateBookmarked = currentDateAndVideo.match(datePattern)
+                                    const currentVideo = currentDateAndVideo.match(videoPattern)
+                                    const currentDateBookmarkedString = currentDateBookmarked.toString()
+                                    const currentVideoString = currentVideo.toString()
+                                    const currentVideoPath = currentVideoString.slice(23, currentVideoString.length).toString()
+                                    const urlOptions = {
+                                        host: 'www.tiktokv.com',
+                                        path: currentVideoPath,
+                                        port: 443,
+                                        family: 4,
+                                        method: 'GET',
+                                        timeout: 3000,
+                                    }
+                                    callback(null, currentDateBookmarkedString, urlOptions)
+                                },
+                                function getRedirect (currentDateBookmarkedString, urlOptions, callback) {
+                                    https.get(urlOptions, response => {
+                                        const redirectedUrl = response.responseUrl
+                                        callback(null, currentDateBookmarkedString, redirectedUrl)
+                                    }).on('error', error => {
+                                        const getError = `Unsuccessful get request: ${error}`
+                                        res.status(500).send(getError)
+                                    })
+                                },
+                                function (currentDateBookmarkedString, redirectedUrl, callback) {
+                                    const getTiktokData = (async () => {
+                                        const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
+                                        if (tiktokResponse.status >= 200 && tiktokResponse.status <= 299) {
+                                            const tiktokData = await tiktokResponse.json()
+                                            callback(null, currentDateBookmarkedString, redirectedUrl, tiktokData)
+                                        } else {
+                                            // NOTE: Change to a flash message!!
+                                            const fetchError = `Unsuccessful fetch response: \n
+                                            Status: ${tiktokResponse.status} \n
+                                            ${tiktokResponse.statusText}`
+                                            res.status(500).send(fetchError)
+                                        }
+                                    })
+                                    getTiktokData()
+                                },
+                                function checkDataValidity (currentDateBookmarkedString, redirectedUrl, tiktokData, callback) {
                                     if (tiktokData.title === undefined) {
-                                        console.log('This video is unavailable. It may have been deleted.')
+                                        const videoUnavailableMessage = 'This video is unavailable. It may have been deleted.'
+                                        console.log(videoUnavailableMessage)
+                                        availableVideosAllAdded()
+                                        return
                                     } else {
-                                        let videodetail = { video_url: redirectedUrl }
-                                        videodetail.title = tiktokData.title
-                                        videodetail.author_url = tiktokData.author_url
-                                        videodetail.author_name = tiktokData.author_name
-                                        videodetail.date = newDate
-                                        const video = new Video(videodetail)
-                                        Video.findOne( {'title': videodetail.title, 'author_name': videodetail.author_name })
-                                        .exec(function (error, found_video) {
+                                        callback(null, currentDateBookmarkedString, redirectedUrl, tiktokData)
+                                    }
+                                },
+                                function saveValidatedData (currentDateBookmarkedString, redirectedUrl, tiktokData, callback) {
+                                    const newVideo = {
+                                        url:  redirectedUrl,
+                                        title: tiktokData.title,
+                                        authorUrl: tiktokData.author_url,
+                                        authorName: tiktokData.author_name,
+                                        dateBookmarked: currentDateBookmarkedString,
+                                    }
+                                    callback(null, redirectedUrl, newVideo)
+                                },
+                                function getTiktokId (redirectedUrl, newVideo, callback) {
+                                    const idRegexPattern = new RegExp(/\d+/)
+                                    if (redirectedUrl.startsWith('https://m')) {
+                                        const tiktokIdArray = redirectedUrl.match(idRegexPattern)
+                                        const tiktokId = tiktokIdArray[0]
+                                        callback(null, redirectedUrl, newVideo, tiktokId)
+                                    }
+                                    if (redirectedUrl.startsWith('https://www')) {
+                                        const videoRegexPattern = new RegExp(/video\/\d+/)
+                                        const tiktokVideoPattern = redirectedUrl.match(videoRegexPattern)
+                                        const tiktokVideoString = tiktokVideoPattern.toString()
+                                        const tiktokIdArray = tiktokVideoString.match(idRegexPattern)
+                                        const tiktokId = tiktokIdArray[0]
+                                        callback(null, newVideo, tiktokId)
+                                    }
+                                },
+/*                                 function checkForDuplicateVideos (newVideo, tiktokId, callback) {
+                                    User.findOne( { $and: [ { email: req.user.email }, { 'videos.id': tiktokId } ] } )
+                                    .exec((error, found_video) => {
+                                        if (error) {
+                                        return next(error)
+                                        }
+                                        if (found_video) {
+                                            const foundVideoMessage = `A video with id ${tiktokId} already exists.`
+                                            console.log(foundVideoMessage)
+                                            availableVideosAllAdded()
+                                        }
+                                        if (!found_video) {
+                                        callback(null, newVideo, tiktokId)
+                                        }
+                                    })
+                                }, */
+                                function checkUsersVideosForDuplicates (newVideo, tiktokId, callback) {
+                                    const checkUsersVideosForDuplicates = async () => {
+                                        const text = 'SELECT * FROM users_videos WHERE user_id = $1 AND video_id = $2'
+                                        const values = [req.user.user_id, tiktokId]
+                                        try {
+                                            const videoQuery = await db.query(text, values)
+                                            const videoQueryResults = videoQuery.rows
+                                            if (videoQueryResults.length > 0) {
+                                                const foundVideoMessage = `A video with id ${tiktokId} already exists in this account.`
+                                                console.log(foundVideoMessage)
+                                                availableVideosAllAdded()
+                                            } else {
+                                            callback(null, newVideo, tiktokId)
+                                            }
+                                        } catch (error) {
+                                            res.status(500).send(error.stack)
+                                        }
+                                    }
+                                    checkUsersVideosForDuplicates()
+                                },
+                                function checkAllVideosForDuplicates (newVideo, tiktokId, callback) {
+                                    const checkAllVideosForDuplicates = async () => {
+                                        const text = 'SELECT * FROM videos WHERE video_id = $1'
+                                        const values = [tiktokId]
+                                        try {
+                                            const videoQuery = await db.query(text, values)
+                                            const videoQueryResults = videoQuery.rows
+                                            if (videoQueryResults.length > 0) {
+                                                const addVideoToUsersVideos = async () => {
+                                                    try {
+                                                        await db.query('INSERT INTO users_videos VALUES($1, $2)',
+                                                        [req.user.user_id, tiktokId])
+                                                        availableVideosAllAdded()
+                                                    } catch(error) {
+                                                        res.status(500).send(error.stack)
+                                                    }
+                                                }
+                                                addVideoToUsersVideos()
+                                            } else {
+                                                callback(null, newVideo, tiktokId)
+                                            }
+                                        } catch(error) {
+                                            res.status(500).send(error.stack)
+                                        }
+                                    }
+                                    checkAllVideosForDuplicates()
+                                },
+                                function getBinaryId (newVideo, tiktokId, callback) {
+                                    const tiktokIdBigIntBinaryArray = []
+                                    const tiktokIdInteger = BigNumber(tiktokId)
+                                    let currentInteger = tiktokIdInteger
+                                    while (currentInteger > BigNumber(0)) {
+                                        let remainder = BigNumber(currentInteger).mod(2)
+                                        let remainderString = remainder.toString()
+                                        tiktokIdBigIntBinaryArray.unshift(remainderString)
+                                        currentInteger = BigNumber(currentInteger).div(2)
+                                        if (currentInteger == 0) {
+                                            const currentIntegerString = currentInteger.toString()
+                                            tiktokIdBigIntBinaryArray.unshift(currentIntegerString)
+                                        }
+                                    }
+                                    callback(null, newVideo, tiktokId, tiktokIdBigIntBinaryArray)
+                                },
+                                function getThirtyTwoLeftBits (newVideo, tiktokId, tiktokIdBigIntBinaryArray, callback) {
+                                    const tiktokIdBinaryArray = tiktokIdBigIntBinaryArray.map(number => parseInt(number))
+                                    const tiktokIdBinaryString = tiktokIdBinaryArray.join('')
+                                    const thirtyTwoLeftBits = tiktokIdBinaryString.slice(0,32)
+                                    callback(null, newVideo, tiktokId, thirtyTwoLeftBits)
+                                },
+                                function getDecimalFromBits (newVideo, tiktokId, thirtyTwoLeftBits, callback) {
+                                    const decimalArray = []
+                                    let arrayPlace = 0
+                                    let previousValue = 0
+                                    while (arrayPlace < 32) {
+                                        let valueTotal = previousValue * 2
+                                        let bitAsInteger = parseInt(thirtyTwoLeftBits[arrayPlace])
+                                        let newTotal = bitAsInteger + valueTotal
+                                        decimalArray[0] = newTotal
+                                        previousValue = newTotal
+                                        arrayPlace += 1
+                                    }
+                                    const decimal = decimalArray.toString()
+                                    callback(null, newVideo, tiktokId, decimal)
+                                },
+                                function getDateAdded (newVideo, tiktokId, decimal, callback) {
+                                    const dateAdded = new Date(decimal * 1000)
+                                    callback(null, newVideo, tiktokId, dateAdded)
+                                },
+                                function saveIdAndDateAdded (newVideo, tiktokId, dateAdded, callback) {
+                                    newVideo.id = tiktokId
+                                    newVideo.dateAdded = dateAdded
+                                    callback(null, newVideo)
+                                },
+/*                                 function addVideo (newVideo, callback) {
+                                    User.findOne({ 'email' : req.user.email })
+                                    .exec((error, user) => {
+                                        if (error) {
+                                            return next(error)
+                                        }
+                                        user.videos.push(newVideo)
+                                        user.save((error) => {
                                             if (error) {
                                                 return next(error)
                                             }
-                                            if (found_video) {
-                                                console.log(`A video by ${videodetail.author_name}
-                                                called ${videodetail.title} already exists.`)
-                                            } else {
-                                                video.save(function (error) {
-                                                    if (error) {
-                                                        return next(error)
-                                                    }
-                                                    console.log(`Video by ${videodetail.author_name}
-                                                    called ${videodetail.title} added!`)
-                                                })
-                                            }
+                                            console.log('Video added!')
+                                            availableVideosAllAdded()
                                         })
-                                    }    
-                                } else {
-                                    const fetchError = `Unsuccessful fetch response: \n
-                                    Status: ${tiktokResponse.status} \n
-                                    ${tiktokResponse.statusText}`
-                                    res.status(500).send(fetchError)
+                                    })
+                                }, */
+                                function addVideo (newVideo, callback) {
+                                    const addVideo = async () => {
+                                        try {
+                                            await db.query('BEGIN')
+                                            const insertVideoText = 'INSERT INTO videos VALUES($1, $2, $3, $4, $5, $6)'
+                                            const insertVideoValues = [newVideo.id, newVideo.url, newVideo.title,
+                                                newVideo.authorUrl, newVideo.authorName, newVideo.dateAdded]
+                                            await db.query(insertVideoText, insertVideoValues)
+                                            const insertReferenceText = 'INSERT INTO users_videos VALUES($1, $2)'
+                                            const insertReferenceValues = [req.user.user_id, newVideo.id]
+                                            await db.query(insertReferenceText, insertReferenceValues)
+                                            await db.query('COMMIT')
+                                            console.log('Video added!')
+                                            availableVideosAllAdded()
+                                        }
+                                        catch(error) {
+                                            await db.query('ROLLBACK')
+                                            res.send(500).status(error)
+                                        }
+                                    }
+                                    addVideo()
                                 }
-                            }
-                            catch(status) {
-                                const awaitError = `Unsuccessful await attempt: \n
-                                Status: ${status}`
-                                res.status(500).send(awaitError)
-                            }
-                        })
-                        addOneVideo()
-                    }).on('error', error => {
-                        const getError = `Unsuccessful get request: ${error}`
-                        res.status(500).send(getError)
-                    })
-                    delay(times-1)
-                    videoCount += 1
-                } else {
-                    return
-                }} catch(error) {
-                    const timeoutError = `Unsuccessful timeout attempt: \n
-                    Status: ${error}`
-                    res.status(500).send(timeoutError)
-                }
+                            ])
+                            delayNextVideo(videosRemaining - 1)
+                            videosProcessed += 1
+                        } else {
+                            return
+                        }
+                    } catch(status) {
+                        const awaitError = `Unsuccessful await attempt: \n
+                        Status: ${status}`
+                        res.status(500).send(awaitError)
+                    }  
                 }, 500)
-            } delay(arrayLength)
+            }
+            delayNextVideo(totalVideoNumber)
             res.redirect('/')
         }
-    }
+    ])
 }
 
 exports.video_delete_post = function(req, res, next) {
     const videos = req.body.deleted_video
-    const videoString = videos.toString()
-    const videoIds = videoString.split(',')
-    Video.remove({'_id' : {$in: videoIds}},
-    function(error) {
-        if (error) {
-            return next(error)
+    const deleteVideo = async () => {
+        try {
+            await db.query('BEGIN')
+            const videoIdsToDelete = videos.length
+            let arrayPosition = 0
+            while (arrayPosition < videoIdsToDelete) {
+                if (typeof(videos) === 'string') {
+                    await db.query(`DELETE FROM lists_videos USING users_videos
+                    WHERE lists_videos.video_id = users_videos.video_id AND user_id = $1 AND
+                    lists_videos.video_id = $2`,
+                    [req.user.user_id, videos])
+                    await db.query('DELETE FROM users_videos WHERE user_id = $1 AND video_id = $2',
+                [req.user.user_id, videos])
+                }
+                await db.query(`DELETE FROM lists_videos USING users_videos
+                WHERE lists_videos.video_id = users_videos.video_id AND user_id = $1 AND
+                lists_videos.video_id = $2`,
+                [req.user.user_id, videos[arrayPosition]])
+                await db.query('DELETE FROM users_videos WHERE user_id = $1 AND video_id = $2',
+                [req.user.user_id, videos[arrayPosition]])
+                arrayPosition++
+            }
+            await db.query('COMMIT')
+            res.redirect('/')
         }
-        const previousPage = req.header('referer')
-        res.redirect(previousPage)
-        console.log(`Deleted ${videoIds}`)
-    })
+        catch(error) {
+            await db.query('ROLLBACK')
+            res.status(500).send(error.stack)
+        }
+    }
+    deleteVideo()
 }
 
 exports.video_search_post = [
     validator.body('video_search').trim().escape()
     .isLength( {min: 1} ).withMessage('Please enter a search term.'),
-    validator.sanitizeBody('video_search'),
+    validator.body('video_search'),
     (req, res) => {
         const errors = validator.validationResult(req);
         if (!errors.isEmpty()) {
-            console.error(errors)
             const errorMessage = `${errors['errors']['0']['msg']}
             You entered: ${errors['errors']['0']['value']}`
             res.status(200).send(errorMessage)
         }
         const page = req.params.page
         const videoQuery = req.body.video_search.toString()
-        const regexQuery = new RegExp(videoQuery, 'gi')
-        app.locals.searchQuery = regexQuery
+        app.locals.searchQuery = videoQuery
         res.redirect(page)
     }
 ]
@@ -261,28 +659,53 @@ exports.video_search_get = function(req, res, next) {
     const page = req.params.page
     const previousPage = req.header('referer')
     async.parallel({
-        found_video: function(callback) {
-            Video.find( { $or: [ { title: app.locals.searchQuery},
-                { author_name: app.locals.searchQuery } ] } )
-            .collation( { locale: 'en', strength: 1 } )
-            .limit(videoLimitPerPage)
-            .skip(videoLimitPerPage * (page - 1))
-            .exec(callback)
+        pagination: (callback) => {
+            const pagination = {
+                'current_page': page,
+                'previous_page': previousPage,
+                'video_limit': videoLimitPerPage,
+            }
+            callback(null, pagination)
         },
-        video_count: function(callback) {
-            Video.find( { $or: [ { title: app.locals.searchQuery},
-                { author_name: app.locals.searchQuery } ] } )
-            .collation( { locale: 'en', strength: 1 } )
-            .countDocuments({}, callback)
+        get_videos: function(callback) {
+            const getVideos = async () => {
+                const text = `SELECT users_videos.video_id, url, title, author_url, author_name, date_added, date_bookmarked FROM users_videos
+                INNER JOIN videos
+                ON videos.video_id = users_videos.video_id
+                WHERE users_videos.user_id = $1
+                AND (videos.title ~* $2 OR videos.author_name ~* $2)
+                ORDER BY date_bookmarked ASC
+                LIMIT ${videoLimitPerPage}
+                OFFSET ${videoLimitPerPage * (page - 1)}`
+                const values = [req.user.user_id, app.locals.searchQuery]
+                try {
+                    const videoQuery = await db.query(text, values)
+                    const videoQueryResults = videoQuery.rows
+                    console.log(app.locals.searchQuery)
+                    callback(null, videoQueryResults)
+                } catch(error) {
+                    res.status(500).send(error.stack)
+                }
+            }
+            getVideos()
         },
-        previous_page: function(callback) {
-            callback(null, previousPage)
-        },
-        current_page: function(callback) {
-            callback(null, page)
-        },
-        video_limit: function(callback) {
-            callback(null, videoLimitPerPage)
+        count_videos: (callback) => {
+            const countVideos = async () => {
+                const text = `SELECT users_videos.video_id, url, title, author_url, author_name, date_added, date_bookmarked FROM users_videos
+                INNER JOIN videos
+                ON videos.video_id = users_videos.video_id
+                WHERE users_videos.user_id = $1
+                AND (videos.title ~* $2 OR videos.author_name ~* $2)`
+                const values = [req.user.user_id, app.locals.searchQuery]
+                try {
+                    const videoQuery = await db.query(text, values)
+                    const videoQueryResults = videoQuery.rows.length
+                    callback(null, videoQueryResults)
+                } catch(error) {
+                    res.send(500).status(error.stack)
+                }
+            }
+            countVideos()
         },
     }, function (error, results) {
         if (error) {
@@ -291,7 +714,6 @@ exports.video_search_get = function(req, res, next) {
         res.render('video-search', { title: 'Search Results', error: error, data: results})
     })
 }
-
 
 exports.video_sort_post = function(req, res) {
     const sortOption = req.body.video_sort
@@ -303,24 +725,55 @@ exports.video_move_post = function(req, res, next) {
     const videos = req.body.moved_video
     const videoString = videos.toString()
     const videoIds = videoString.split(',')
-    const destinationList = req.body.move_destination
-    List.find( { _id: destinationList} )
-        .exec( function(error, listData) {
-            if (error) {
-                return next(error)
+    const destinationList = parseInt(req.body.move_destination)
+    async.waterfall([
+        function checkListForDuplicates (callback) {
+            const checkListForDuplicates = async () => {
+                console.log('Checking for duplicates in list '+destinationList+' for video(s) '+videoIds)
+                const text = 'SELECT video_id FROM lists_videos WHERE list_id = $1 AND video_id = ANY($2)'
+                const values = [destinationList, videoIds]
+                try {
+                    const videoQuery = await db.query(text, values)
+                    const videosInList = videoQuery.rows
+                    console.group('Query results:')
+                    console.log(videosInList)
+                    console.log('Length: '+videosInList.length)
+                    console.groupEnd()
+                    callback(null, videosInList)
+                } catch(error) {
+                    res.status(500).send(error.stack)
+                }
             }
-            if (listData) {
-                const videosInList = listData[0].videos
-                const addedVideos = videoIds.filter(video => ((videosInList.includes(video)) === false))
-                List.findByIdAndUpdate(destinationList,
-                    { $push: { videos: addedVideos } },
-                    function(error) {
-                        if (error) {
-                            return next(error)
-                        }
-                    res.redirect(`../list/${destinationList}`)
-                    console.log(`Added ${addedVideos.length} video(s) to list ${destinationList}`)
-                })
+            checkListForDuplicates()
+        },
+        function skipDuplicates (videosInList, callback) {
+                const queryDuplicatesFiltered = videosInList.map(video => video['video_id'])
+                const videosToAdd = videoIds.filter(video => queryDuplicatesFiltered.includes(video) === false)
+                if (videosToAdd.length === 0) {
+                    res.status(200).send('All videos selected already exist in this list.')
+                }
+                callback(null, videosToAdd)
+        },
+        function addVideosToList (videosToAdd, callback) {
+            const addVideosToList = async () => {
+                try {
+                    await db.query('BEGIN')
+                    const videoIdsToAdd = videosToAdd.length
+                    let arrayPosition = 0
+                    while (arrayPosition < videoIdsToAdd) {
+                        console.log('Adding video to list!')
+                        const text = 'INSERT INTO lists_videos VALUES($1, $2)'
+                        const values = [destinationList, videosToAdd[arrayPosition]]
+                        await db.query(text, values)
+                        arrayPosition++
+                    }
+                    await db.query('COMMIT')
+                } catch(error) {
+                    res.status(500).send(error.stack)
+                }
             }
-        })
+            addVideosToList()
+            res.redirect(`../list/${destinationList}`)
+        }
+    ])
 }
