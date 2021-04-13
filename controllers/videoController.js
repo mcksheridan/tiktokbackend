@@ -14,6 +14,11 @@ const app = express()
 const async = require('async')
 const fetch = require('node-fetch')
 
+const { checkFileData, extractLikeListData, createVideoDateObjects } = require('./handleLikeList');
+const {
+  getTiktokId, getBinaryIdArray, getThirtyTwoLeftBits, getDecimalFromBits, getDateAdded,
+} = require('./handleTikTokId');
+
 app.locals.videoLimitPerPage = 15
 const videoLimitPerPage = app.locals.videoLimitPerPage
 
@@ -327,59 +332,9 @@ exports.video_multiadd_post = function (req, res, next) {
 
   const fileData = checkFileValidity();
 
-  const checkFileData = (file) => {
-    /* Valid files should only contain characters matching the following pattern:
-    Date: 0000-00-00 00:00:00
-    Video Link: https://www.tiktokv.com/share/video/00000000000000000000/ */
-    const regexCheck = new RegExp(/[^A-z0-9\s:\-/.]/);
-    if (file === '') {
-      res.send('Your Like List is empty.');
-    };
-    if (file.match(regexCheck)) {
-      res.send('Your file contains invalid characters. Please upload your Like List file.');
-    };
-    if (file !== '' && (file.match(regexCheck) === null)) {
-      return file;
-    };
-  };
-
   const likeList = checkFileData(fileData);
 
-  const extractLikeListData = (file) => {
-    const videoDatePattern = new RegExp
-      (/Date: \d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d\sVideo Link: https:\/\/www.tiktokv.com\/share\/video\/\d*\//, 'g');
-    const dateVideoArray = file.match(videoDatePattern);
-    return dateVideoArray;
-  };
-
   const likeListDateVideoArray = extractLikeListData(likeList);
-
-  const extractDateToString = (array) => {
-    const datePattern = new RegExp(/\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d/);
-    const dateArray = array.match(datePattern);
-    const dateString = dateArray.toString();
-    return dateString;
-  };
-
-  const extractVideoToString = (array) => {
-    const videoPattern = new RegExp(/https:\/\/www.tiktokv.com\/share\/video\/\d*\//);
-    const videoArray = array.match(videoPattern);
-    const videoString = videoArray.toString();
-    return videoString;
-  };
-
-  const createVideoDateObjects = (array) => {
-    const videoAndDateObjectArray = [];
-    array.forEach((videoAndDate, likeListIndex) => {
-      const videoString = extractVideoToString(videoAndDate);
-      const dateString = extractDateToString(videoAndDate);
-      videoAndDateObjectArray[likeListIndex] = {
-        video: videoString,
-        date: dateString
-      };
-    });
-    return videoAndDateObjectArray;
-  };
 
   const allVideosAndDates = createVideoDateObjects(likeListDateVideoArray);
 
@@ -423,66 +378,6 @@ exports.video_multiadd_post = function (req, res, next) {
     }
     return video
   }
-
-  const getTiktokId = (url) => {
-    const idRegexPattern = new RegExp(/\d+/);
-    // Mobile URL format
-    if (url.startsWith('https://m')) {
-      const tiktokIdArray = url.match(idRegexPattern);
-      const tiktokId = tiktokIdArray[0];
-      return tiktokId;
-    };
-    // Desktop URL format
-    if (url.startsWith('https://www')) {
-      const videoRegexPattern = new RegExp(/video\/\d+/);
-      const tiktokVideoPattern = url.match(videoRegexPattern);
-      const tiktokVideoString = tiktokVideoPattern.toString();
-      const tiktokIdArray = tiktokVideoString.match(idRegexPattern);
-      const tiktokId = tiktokIdArray[0];
-      return tiktokId;
-    };
-  }
-
-  const getBinaryIdArray = (id) => {
-    const idBigIntBinaryArray = [];
-    const idInteger = BigNumber(id);
-    let currentInteger = idInteger;
-    while (currentInteger > BigNumber(0)) {
-      const remainder = BigNumber(currentInteger).mod(2); // modulo operation
-      const remainderString = remainder.toString();
-      idBigIntBinaryArray.unshift(remainderString);
-      currentInteger = BigNumber(currentInteger).div(2);
-      /* The current integer will return an object that roughly
-      equals zero but will NOT strictly equal zero */
-      // eslint-disable-next-line eqeqeq
-      if (currentInteger == 0) {
-        idBigIntBinaryArray.unshift('0');
-      }
-    }
-    return idBigIntBinaryArray;
-  };
-
-  const getThirtyTwoLeftBits = (binaryArray) => {
-    const binaryArrayIntegers = binaryArray.map(integerString => parseInt(integerString));
-    const binaryString = binaryArrayIntegers.join('');
-    const thirtyTwoLeftBits = binaryString.slice(0,32);
-    return thirtyTwoLeftBits;
-  };
-
-  const getDecimalFromBits = (bits) => {
-    const bitsArray = bits.split('');
-    const decimalArray = bitsArray.reduce((acc, currVal) => {
-      const bitAsInteger = parseInt(currVal);
-      return (acc * 2) + bitAsInteger;
-    });
-    const decimal = decimalArray.toString();
-    return decimal;
-  };
-
-  const getDateAdded = (idDecimal) => {
-    const dateAdded = new Date(idDecimal * 1000);
-    return dateAdded;
-  };
 
   const allVideosAndDatesLength = allVideosAndDates.length
 
