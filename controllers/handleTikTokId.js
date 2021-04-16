@@ -61,10 +61,14 @@ const getDateAdded = (idDecimal) => {
   return dateAdded;
 };
 
+// eslint-disable-next-line max-len
+const getDateAddedFromTikTokId = (tiktokId) => getDateAdded(getDecimalFromBits(getThirtyTwoLeftBits(getBinaryIdArray(tiktokId))));
+
 module.exports = {
   getTiktokId,
   getBinaryIdArray,
   getThirtyTwoLeftBits,
   getDecimalFromBits,
   getDateAdded,
+  getDateAddedFromTikTokId,
 };

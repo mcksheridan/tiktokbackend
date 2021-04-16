@@ -15,9 +15,7 @@ const async = require('async')
 const fetch = require('node-fetch')
 
 const { checkFileData, extractLikeListData, createVideoDateObjects, removeNullVideoDateEntries } = require('./handleLikeList');
-const {
-  getTiktokId, getBinaryIdArray, getThirtyTwoLeftBits, getDecimalFromBits, getDateAdded,
-} = require('./handleTikTokId');
+const { getTiktokId, getDateAddedFromTikTokId } = require('./handleTikTokId');
 
 const utilVariables = require('./util/variables');
 
@@ -355,12 +353,17 @@ exports.video_multiadd_post = function (req, res, next) {
     return allVideosAndDates
   }
 
-  const parsedList = parseList()
+  const parsedList = parseList();
 
   const getRedirectedUrl = async (url) => {
-    const response = await fetch(url);
-    const redirectedUrl = await response.url;
-    return redirectedUrl;
+    try {
+      const response = await fetch(url);
+      const redirectedUrl = await response.url;
+      return redirectedUrl;
+    }
+    catch (error) {
+      console.error(error.message)
+    }
   };
 
   const getTikTokApiData = async (url) => {
@@ -388,7 +391,6 @@ exports.video_multiadd_post = function (req, res, next) {
 
   const getVideoDataObject = async (data, videoDateArray) => {
     const video = {
-      url: videoDateArray.video,
       title: await data.title,
       authorUrl: await data.author_url,
       authorName: await data.author_name,
@@ -398,6 +400,81 @@ exports.video_multiadd_post = function (req, res, next) {
   }
 
   const allVideosAndDatesLength = parsedList.length
+  const checkUsersVideosForDuplicates = async (userId, videoId) => {
+    const text = 'SELECT * FROM users_videos WHERE user_id = $1 AND video_id = $2';
+    const values = [userId, videoId];
+    try {
+      const query = await db.query(text, values);
+      const results = query.rows;
+      return results.length > 0
+    } catch (error) {
+      console.error(error.stack);
+      res.status(500).send('An error occured while adding this video');
+    }
+  }
+
+  const checkAllVideosForDuplicates = async (videoId) => {
+    const text = 'SELECT * FROM videos WHERE video_id = $1';
+    const values = [videoId];
+    try {
+      const query = await db.query(text, values);
+      const results = query.rows;
+      if (results.length > 0) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(error.stack);
+      res.status(500).send('An error occured while adding this video');
+    }
+  }
+
+  const addVideoToAllVideos = async (video) => {
+    const text = 'INSERT INTO videos VALUES($1, $2, $3, $4, $5, $6)';
+    const values = [video.id, video.url, video.title, video.authorUrl, video.authorName, video.dateAdded];
+    try {
+      await db.query(text, values);
+      console.log('Video added to all videos');
+    } catch (error) {
+      console.error(error.stack);
+      res.status(500).send('An error occured while adding this video');
+    }
+  }
+
+  const addVideoToUsersVideos = async (userId, video) => {
+    const text = 'INSERT INTO users_videos VALUES($1, $2, $3)';
+    const values = [userId, video.id, video.dateBookmarked];
+    try {
+      await db.query(text, values);
+      console.log('Video added to user\'s videos!');
+    } catch (error) {
+      console.error(error.stack);
+      res.status(500).send('An error occured while adding this video');
+    }
+  }
+
+  const addVideo = async (isUsersVideosDuplicate, isAllVideosDuplicate, video, userId) => {
+    if (!isUsersVideosDuplicate) {
+      if (!isAllVideosDuplicate) {
+        console.log('This video should be added to the general database');
+        try {
+          await addVideoToAllVideos(video);
+        } catch (error) {
+          console.error(error.stack);
+        }
+      }
+      console.log('This video should be added to the user\'s videos');
+      try {
+        await addVideoToUsersVideos(userId, video);
+        return;
+      } catch (error) {
+        console.error(error.stack);
+      }
+    }
+    const videoExistsInDatabaseMessage = 'This video already exists in the database';
+    console.log(videoExistsInDatabaseMessage);
+    return videoExistsInDatabaseMessage;
+  };
 
   let queuePosition = 0
 
@@ -409,7 +486,12 @@ exports.video_multiadd_post = function (req, res, next) {
        if (isApiDataAvailable(tiktokData)) {
          const newVideo = await getVideoDataObject(tiktokData, videoDateArray[queuePosition])
          newVideo.id = getTiktokId(videoDateArray[queuePosition].video)
-         newVideo.dateAdded = getDateAdded(getDecimalFromBits(getThirtyTwoLeftBits(getBinaryIdArray(newVideo.id))));
+         newVideo.url = `${newVideo.authorUrl}/video/${newVideo.id}`
+         newVideo.dateAdded = getDateAddedFromTikTokId(newVideo.id);
+         console.log(`Video ${queuePosition} processed: ${newVideo.url}`);
+         const isUsersVideosDuplicate = checkUsersVideosForDuplicates(req.user.user_id, newVideo.id);
+         const isAllVideosDuplicate = checkAllVideosForDuplicates(newVideo.id);
+         addVideo(isUsersVideosDuplicate, isAllVideosDuplicate, newVideo, req.user.user_id);
        }
        queuePosition++
        queueRemaining--
@@ -421,128 +503,7 @@ exports.video_multiadd_post = function (req, res, next) {
 
   processVideos(allVideosAndDatesLength, parsedList)
 
-  res.send('');
-//     async.waterfall([
-//         function addAllVideos (likeList, callback) {
-//                 setTimeout(() => {
-//                     try {
-//                         if (videosProcessed < totalVideoNumber) {
-//                             async.waterfall([
-// /*                                 function checkForDuplicateVideos (newVideo, tiktokId, callback) {
-//                                     User.findOne( { $and: [ { email: req.user.email }, { 'videos.id': tiktokId } ] } )
-//                                     .exec((error, found_video) => {
-//                                         if (error) {
-//                                         return next(error)
-//                                         }
-//                                         if (found_video) {
-//                                             const foundVideoMessage = `A video with id ${tiktokId} already exists.`
-//                                             console.log(foundVideoMessage)
-//                                             availableVideosAllAdded()
-//                                         }
-//                                         if (!found_video) {
-//                                         callback(null, newVideo, tiktokId)
-//                                         }
-//                                     })
-//                                 }, */
-//                                 function checkUsersVideosForDuplicates (newVideo, tiktokId, callback) {
-//                                     const checkUsersVideosForDuplicates = async () => {
-//                                         const text = 'SELECT * FROM users_videos WHERE user_id = $1 AND video_id = $2'
-//                                         const values = [req.user.user_id, tiktokId]
-//                                         try {
-//                                             const videoQuery = await db.query(text, values)
-//                                             const videoQueryResults = videoQuery.rows
-//                                             if (videoQueryResults.length > 0) {
-//                                                 const foundVideoMessage = `A video with id ${tiktokId} already exists in this account.`
-//                                                 console.log(foundVideoMessage)
-//                                                 availableVideosAllAdded()
-//                                             } else {
-//                                             callback(null, newVideo, tiktokId)
-//                                             }
-//                                         } catch (error) {
-//                                             res.status(500).send(error.stack)
-//                                         }
-//                                     }
-//                                     checkUsersVideosForDuplicates()
-//                                 },
-//                                 function checkAllVideosForDuplicates (newVideo, tiktokId, callback) {
-//                                     const checkAllVideosForDuplicates = async () => {
-//                                         const text = 'SELECT * FROM videos WHERE video_id = $1'
-//                                         const values = [tiktokId]
-//                                         try {
-//                                             const videoQuery = await db.query(text, values)
-//                                             const videoQueryResults = videoQuery.rows
-//                                             if (videoQueryResults.length > 0) {
-//                                                 const addVideoToUsersVideos = async () => {
-//                                                     try {
-//                                                         await db.query('INSERT INTO users_videos VALUES($1, $2)',
-//                                                         [req.user.user_id, tiktokId])
-//                                                         availableVideosAllAdded()
-//                                                     } catch(error) {
-//                                                         res.status(500).send(error.stack)
-//                                                     }
-//                                                 }
-//                                                 addVideoToUsersVideos()
-//                                             } else {
-//                                                 callback(null, newVideo, tiktokId)
-//                                             }
-//                                         } catch(error) {
-//                                             res.status(500).send(error.stack)
-//                                         }
-//                                     }
-//                                     checkAllVideosForDuplicates()
-//                                 },
-// /*                                 function addVideo (newVideo, callback) {
-//                                     User.findOne({ 'email' : req.user.email })
-//                                     .exec((error, user) => {
-//                                         if (error) {
-//                                             return next(error)
-//                                         }
-//                                         user.videos.push(newVideo)
-//                                         user.save((error) => {
-//                                             if (error) {
-//                                                 return next(error)
-//                                             }
-//                                             console.log('Video added!')
-//                                             availableVideosAllAdded()
-//                                         })
-//                                     })
-//                                 }, */
-//                                 function addVideo (newVideo, callback) {
-//                                     const addVideo = async () => {
-//                                         try {
-//                                             await db.query('BEGIN')
-//                                             const insertVideoText = 'INSERT INTO videos VALUES($1, $2, $3, $4, $5, $6)'
-//                                             const insertVideoValues = [newVideo.id, newVideo.url, newVideo.title,
-//                                                 newVideo.authorUrl, newVideo.authorName, newVideo.dateAdded]
-//                                             await db.query(insertVideoText, insertVideoValues)
-//                                             const insertReferenceText = 'INSERT INTO users_videos VALUES($1, $2)'
-//                                             const insertReferenceValues = [req.user.user_id, newVideo.id]
-//                                             await db.query(insertReferenceText, insertReferenceValues)
-//                                             await db.query('COMMIT')
-//                                             console.log('Video added!')
-//                                             availableVideosAllAdded()
-//                                         }
-//                                         catch(error) {
-//                                             await db.query('ROLLBACK')
-//                                             res.send(500).status(error)
-//                                         }
-//                                     }
-//                                     addVideo()
-//                                 }
-//                             ])
-//                         } else {
-//                             return
-//                         }
-//                     } catch(status) {
-//                         const awaitError = `Unsuccessful await attempt: \n
-//                         Status: ${status}`
-//                         res.status(500).send(awaitError)
-//                     }
-//                 }, 500)
-//             }
-//             res.redirect('/')
-//         }
-//     ])
+  res.redirect('/');
 }
 
 exports.video_delete_post = function(req, res, next) {
