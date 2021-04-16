@@ -378,13 +378,13 @@ exports.video_multiadd_post = function (req, res, next) {
   const isApiDataAvailable = (data) => {
     /* A video that has been removed from TikTok will still have a successful API response.
     Its JSON data will look like this: { status_msg: 'Something went wrong' } */
-   if (data.status_msg) {
-     return false
-   }
-   if (!data.status_msg) {
-     return true
-   }
-  }
+    if (data.status_msg) {
+      return false;
+    }
+    if (!data.status_msg) {
+      return true;
+    }
+  };
 
   const getVideoDataObject = async (data, videoDateArray) => {
     const video = {
