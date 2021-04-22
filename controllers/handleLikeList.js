@@ -1,42 +1,46 @@
-const checkFileData = (file, res) => {
+const checkFileData = (file) => {
+  const fileData = {
+    data: file,
+    status: 'Valid', // Valid, invalid, or empty
+  };
   const regexCheck = new RegExp(/[^A-z0-9\s:\-/.]/);
-  if (file === '') {
-    const emptyFileMessage = 'Your Like List is empty';
-    res.send(emptyFileMessage);
-    return emptyFileMessage;
+  if (!file) {
+    fileData.status = 'Empty';
+    return fileData;
   }
   if (file.match(regexCheck)) {
-    const invalidCharacterMessage = 'Your file contains invalid characters. Please upload your Like List file.';
-    res.send(invalidCharacterMessage);
-    return invalidCharacterMessage;
+    fileData.status = 'Invalid';
+    return fileData;
   }
-  console.log('Like List data is valid');
-  return file;
+  return fileData;
 };
 
 const extractLikeListData = (file) => {
   const videoDatePattern = new RegExp(/Date: \d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d\sVideo Link: https:\/\/www.tiktokv.com\/share\/video\/\d*\//, 'g');
   const dateVideoArray = file.match(videoDatePattern);
-  return dateVideoArray;
+  if (dateVideoArray) {
+    return dateVideoArray;
+  }
+  return [];
 };
 
-const extractDateToString = (array) => {
+const extractDateToString = (videoDateString) => {
   const datePattern = new RegExp(/\d{4}-\d\d-\d\d\s\d\d:\d\d:\d\d/);
-  const dateArray = array.match(datePattern);
+  const dateArray = videoDateString.match(datePattern);
   if (!dateArray) {
     return null;
   }
-  const dateString = dateArray.toString();
+  const [dateString] = dateArray;
   return dateString;
 };
 
-const extractVideoToString = (array) => {
+const extractVideoToString = (videoDateString) => {
   const videoPattern = new RegExp(/https:\/\/www.tiktokv.com\/share\/video\/\d*\//);
-  const videoArray = array.match(videoPattern);
+  const videoArray = videoDateString.match(videoPattern);
   if (!videoArray) {
     return null;
   }
-  const videoString = videoArray.toString();
+  const [videoString] = videoArray;
   return videoString;
 };
 
@@ -53,10 +57,18 @@ const createVideoDateObjects = (array) => {
   return videoAndDateObjectArray;
 };
 
+const removeNullVideoDateEntries = (videoAndDateObjectArray) => {
+  const cleanVideoAndDateObjectArray = videoAndDateObjectArray.filter((object) =>
+    // eslint-disable-next-line implicit-arrow-linebreak
+    object.video !== null && object.date !== null);
+  return cleanVideoAndDateObjectArray;
+};
+
 module.exports = {
   checkFileData,
   extractLikeListData,
   extractDateToString,
   extractVideoToString,
   createVideoDateObjects,
+  removeNullVideoDateEntries,
 };

@@ -1,6 +1,6 @@
 const {
   checkFileData, extractLikeListData, extractDateToString,
-  extractVideoToString, createVideoDateObjects,
+  extractVideoToString, createVideoDateObjects, removeNullVideoDateEntries,
 } = require('../controllers/handleLikeList');
 
 const oneEntryLikeList = 'Date: 2020-08-10 19:48:52 Video Link: https://www.tiktokv.com/share/video/6857021290482633989/';
@@ -12,19 +12,26 @@ describe('Only files with content and without invalid characters will be returne
   const emptyLikeList = '';
   const invalidCharLikeList = `Date: $ 2020-08-10 19:48:52
   Video Link: https://www.tiktokv.com/share/video/6857021290482633989/`;
-  const res = {};
-  res.send = (message) => message;
   it('Returns a valid like list', () => {
     const result = checkFileData(oneEntryLikeList);
-    expect(result).toBe(oneEntryLikeList);
+    expect(result).toEqual({
+      data: oneEntryLikeList,
+      status: 'Valid',
+    });
   });
   it('Returns a message saying the Like List is empty', () => {
-    const result = checkFileData(emptyLikeList, res);
-    expect(result).toBe('Your Like List is empty');
+    const result = checkFileData(emptyLikeList);
+    expect(result).toEqual({
+      data: emptyLikeList,
+      status: 'Empty',
+    });
   });
   it('Returns a message saying the Like List contains invalid characters', () => {
-    const result = checkFileData(invalidCharLikeList, res);
-    expect(result).toBe('Your file contains invalid characters. Please upload your Like List file.');
+    const result = checkFileData(invalidCharLikeList);
+    expect(result).toEqual({
+      data: invalidCharLikeList,
+      status: 'Invalid',
+    });
   });
 });
 
@@ -41,7 +48,7 @@ describe('Strings with Like List content can be parsed into arrays with video/da
   });
   it('Returns null because the content does not match the regular express', () => {
     const result = extractLikeListData(invalidLikeList);
-    expect(result).toEqual(null);
+    expect(result).toEqual([]);
   });
   it('Returns only one entry because one date/video pair was invalid', () => {
     const result = extractLikeListData(mixedLikeListString);
@@ -101,13 +108,10 @@ describe('Arrays with pairs of valid date/video strings can be separated into ke
         date: '2020-08-10 19:48:52',
       }]);
   });
-  it('Adds null entry to array for an invalid date/video pair', () => {
-    const invalidArray = ['asdofijad'];
-    const result = createVideoDateObjects(invalidArray);
-    expect(result).toEqual([{
-      video: null,
-      date: null,
-    }]);
+  it('Adds null entry to array for a nonexistent date/video pair', () => {
+    const emptyArray = [];
+    const result = createVideoDateObjects(emptyArray);
+    expect(result).toEqual([]);
   });
   it('Adds one video/date pair to an array and creates a null entry for an invalid date/video pair', () => {
     const mixedValidityArray = [];
@@ -124,5 +128,28 @@ describe('Arrays with pairs of valid date/video strings can be separated into ke
         date: null,
       },
     ]);
+  });
+});
+
+describe('Arrays and video and date objects with null values are filtered out', () => {
+  const validArray = createVideoDateObjects(twoEntryLikeListArray);
+  const nullObjects = {
+    video: null,
+    date: null,
+  };
+  const mixedValidityArray = createVideoDateObjects(oneEntryLikeListArray);
+  mixedValidityArray.push(nullObjects);
+  const invalidArray = [nullObjects];
+  it('Preserves an array of objects with no null video/date values', () => {
+    const result = removeNullVideoDateEntries(validArray);
+    expect(result).toEqual(createVideoDateObjects(twoEntryLikeListArray));
+  });
+  it('Removes null video/date values from an array', () => {
+    const result = removeNullVideoDateEntries(mixedValidityArray);
+    expect(result).toEqual(createVideoDateObjects(oneEntryLikeListArray));
+  });
+  it('Returns an empty array when there are only null video/date values', () => {
+    const result = removeNullVideoDateEntries(invalidArray);
+    expect(result).toEqual([]);
   });
 });

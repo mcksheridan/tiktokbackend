@@ -14,7 +14,7 @@ const app = express()
 const async = require('async')
 const fetch = require('node-fetch')
 
-const { checkFileData, extractLikeListData, createVideoDateObjects } = require('./handleLikeList');
+const { checkFileData, extractLikeListData, createVideoDateObjects, removeNullVideoDateEntries } = require('./handleLikeList');
 const {
   getTiktokId, getBinaryIdArray, getThirtyTwoLeftBits, getDecimalFromBits, getDateAdded,
 } = require('./handleTikTokId');
@@ -330,13 +330,30 @@ exports.video_multiadd_post = function (req, res, next) {
     };
   };
 
-  const fileData = checkFileValidity();
+  const handleFileData = (file) => {
+    const fileDataCheck = checkFileData(file);
+    const fileStatus = fileDataCheck.status;
+    if (fileStatus === 'Valid') {
+      return fileDataCheck.data;
+    }
+    if (fileStatus === 'Empty') {
+      res.send('You uploaded an empty like list');
+    }
+    if (fileStatus === 'Invalid') {
+      res.send('Your like list contains invalid data');
+    }
+  };
 
-  const likeList = checkFileData(fileData);
+  const parseList = () => {
+    const fileData = checkFileValidity()
+    const likeList = handleFileData(fileData);
+    const likeListDateVideoArray = extractLikeListData(likeList);
+    const unfilteredVideoDateObjectArray = createVideoDateObjects(likeListDateVideoArray);
+    const allVideosAndDates = removeNullVideoDateEntries(unfilteredVideoDateObjectArray);
+    return allVideosAndDates
+  }
 
-  const likeListDateVideoArray = extractLikeListData(likeList);
-
-  const allVideosAndDates = createVideoDateObjects(likeListDateVideoArray);
+  const parsedList = parseList()
 
   const getRedirectedUrl = async (url) => {
     const response = await fetch(url);
@@ -379,7 +396,7 @@ exports.video_multiadd_post = function (req, res, next) {
     return video
   }
 
-  const allVideosAndDatesLength = allVideosAndDates.length
+  const allVideosAndDatesLength = parsedList.length
 
   let queuePosition = 0
 
@@ -401,7 +418,7 @@ exports.video_multiadd_post = function (req, res, next) {
     }, 500)
   }
 
-  processVideos(allVideosAndDatesLength, allVideosAndDates)
+  processVideos(allVideosAndDatesLength, parsedList)
 
   res.send('');
 //     async.waterfall([
