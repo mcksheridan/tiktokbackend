@@ -19,6 +19,8 @@ const {
   getTiktokId, getBinaryIdArray, getThirtyTwoLeftBits, getDecimalFromBits, getDateAdded,
 } = require('./handleTikTokId');
 
+const utilVariables = require('./util/variables');
+
 app.locals.videoLimitPerPage = 15
 const videoLimitPerPage = app.locals.videoLimitPerPage
 
@@ -363,14 +365,13 @@ exports.video_multiadd_post = function (req, res, next) {
 
   const getTikTokApiData = async (url) => {
     const redirectedUrl = await getRedirectedUrl(url)
-    const tiktokResponse = await fetch(`https://www.tiktok.com/oembed?url=${redirectedUrl}`)
+    const tiktokResponse = await fetch(`${utilVariables.TIKTOK_API}${redirectedUrl}`)
     try {
       const tiktokData = await tiktokResponse.json()
       return tiktokData
     } catch (error) {
       console.error(error.message)
-      const errorMessageForUser = 'There was an error getting information from TikTok'
-      return errorMessageForUser
+      return utilVariables.ERROR_MSG.tiktokApi;
     }
   }
 
