@@ -321,7 +321,7 @@ exports.video_multiadd_post = function (req, res, next) {
 
   const checkFileValidity = () => {
     if (req.file === undefined) {
-      res.send('Please upload a valid Like List.txt file');
+      res.send(utilVariables.ERROR_MSG.invalidFile);
     };
     if (req.file !== undefined) {
       const likeList = fs.readFileSync(req.file.path, 'UTF-8');
@@ -337,10 +337,10 @@ exports.video_multiadd_post = function (req, res, next) {
       return fileDataCheck.data;
     }
     if (fileStatus === 'Empty') {
-      res.send('You uploaded an empty like list');
+      res.send(utilVariables.ERROR_MSG.emptyFile);
     }
     if (fileStatus === 'Invalid') {
-      res.send('Your like list contains invalid data');
+      res.send(utilVariables.ERROR_MSG.invalidFile);
     }
   };
 
@@ -409,7 +409,7 @@ exports.video_multiadd_post = function (req, res, next) {
       return results.length > 0
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send('An error occured while adding this video');
+      res.status(500).send(utilVariables.ERROR_MSG.database);
     }
   }
 
@@ -425,7 +425,7 @@ exports.video_multiadd_post = function (req, res, next) {
       return false;
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send('An error occured while adding this video');
+      res.status(500).send(utilVariables.ERROR_MSG.database);
     }
   }
 
@@ -437,7 +437,7 @@ exports.video_multiadd_post = function (req, res, next) {
       console.log('Video added to all videos');
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send('An error occured while adding this video');
+      res.status(500).send(utilVariables.ERROR_MSG.database);
     }
   }
 
@@ -449,7 +449,7 @@ exports.video_multiadd_post = function (req, res, next) {
       console.log('Video added to user\'s videos!');
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send('An error occured while adding this video');
+      res.status(500).send(utilVariables.ERROR_MSG.database);
     }
   }
 
