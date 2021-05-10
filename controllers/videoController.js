@@ -321,7 +321,7 @@ exports.video_multiadd_post = function (req, res, next) {
 
   const checkFileValidity = () => {
     if (req.file === undefined) {
-      res.send(utilVariables.ERROR_MSG.invalidFile);
+      res.send(utilVariables.ERROR_MSG.invalidFile.type);
     };
     if (req.file !== undefined) {
       const likeList = fs.readFileSync(req.file.path, 'UTF-8');
@@ -337,10 +337,10 @@ exports.video_multiadd_post = function (req, res, next) {
       return fileDataCheck.data;
     }
     if (fileStatus === 'Empty') {
-      res.send(utilVariables.ERROR_MSG.emptyFile);
+      res.send(utilVariables.ERROR_MSG.invalidFile.empty);
     }
     if (fileStatus === 'Invalid') {
-      res.send(utilVariables.ERROR_MSG.invalidFile);
+      res.send(utilVariables.ERROR_MSG.invalidFile.characters);
     }
   };
 
@@ -374,7 +374,7 @@ exports.video_multiadd_post = function (req, res, next) {
       return tiktokData
     } catch (error) {
       console.error(error.message)
-      return utilVariables.ERROR_MSG.tiktokApi;
+      return utilVariables.ERROR_MSG.api.tiktok;
     }
   }
 
@@ -409,7 +409,7 @@ exports.video_multiadd_post = function (req, res, next) {
       return results.length > 0
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send(utilVariables.ERROR_MSG.database);
+      res.status(500).send(utilVariables.ERROR_MSG.database.read);
     }
   }
 
@@ -425,7 +425,7 @@ exports.video_multiadd_post = function (req, res, next) {
       return false;
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send(utilVariables.ERROR_MSG.database);
+      res.status(500).send(utilVariables.ERROR_MSG.database.read);
     }
   }
 
@@ -437,7 +437,7 @@ exports.video_multiadd_post = function (req, res, next) {
       console.log('Video added to all videos');
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send(utilVariables.ERROR_MSG.database);
+      res.status(500).send(utilVariables.ERROR_MSG.database.write);
     }
   }
 
@@ -449,7 +449,7 @@ exports.video_multiadd_post = function (req, res, next) {
       console.log('Video added to user\'s videos!');
     } catch (error) {
       console.error(error.stack);
-      res.status(500).send(utilVariables.ERROR_MSG.database);
+      res.status(500).send(utilVariables.ERROR_MSG.database.write);
     }
   }
 

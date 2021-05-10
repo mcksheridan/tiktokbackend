@@ -1,10 +1,18 @@
 const TIKTOK_API = 'https://www.tiktok.com/oembed?url=';
 
 const ERROR_MSG = {
-  tiktokApi: 'There was an error getting information from TikTok',
-  invalidFile: 'The file you uploaded is invalid',
-  emptyFile: 'The file you uploaded is empty',
-  database: 'An error occured while contacting the database',
+  api: {
+    tiktok: 'There was an error getting information from TikTok',
+  },
+  invalidFile: {
+    type: 'This file has an invalid extension, size, or name',
+    characters: 'This file has invalid characters',
+    empty: 'This file has no content',
+  },
+  database: {
+    read: 'There was an error reading from the database',
+    write: 'There was an error writing to the database',
+  },
 };
 
 module.exports = {
