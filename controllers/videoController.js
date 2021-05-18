@@ -22,6 +22,10 @@ const rollbar = new Rollbar({
   captureUnhandledRejections: true,
 });
 
+const logErrors = (level, info, ...params) => {
+  rollbar[level](info, ...params);
+};
+
 const db = require('../db');
 
 const {
@@ -35,7 +39,7 @@ app.locals.videoLimitPerPage = 15;
 const { videoLimitPerPage } = app.locals;
 
 exports.index = (req, res) => {
-  rollbar.log('Test with environment variable');
+  logErrors('error', 'Testing the log error function', { testParameter: 'This is a test' }, { testParamterTwo: 'This is also a test. ' });
   const page = parseInt(req.params.page, 10);
   const values = [req.user.user_id];
   async.parallel({
