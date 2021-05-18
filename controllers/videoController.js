@@ -13,6 +13,15 @@ const app = express();
 
 const async = require('async');
 const fetch = require('node-fetch');
+
+const Rollbar = require('rollbar');
+
+const rollbar = new Rollbar({
+  accessToken: process.env.ROLLBAR_KEY,
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+});
+
 const db = require('../db');
 
 const {
@@ -26,6 +35,7 @@ app.locals.videoLimitPerPage = 15;
 const { videoLimitPerPage } = app.locals;
 
 exports.index = (req, res) => {
+  rollbar.log('Test with environment variable');
   const page = parseInt(req.params.page, 10);
   const values = [req.user.user_id];
   async.parallel({

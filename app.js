@@ -1,3 +1,7 @@
+const dotenv = require('dotenv');
+
+dotenv.config();
+
 const cors = require('cors');
 
 const createError = require('http-errors');
@@ -9,7 +13,7 @@ const sassMiddleware = require('node-sass-middleware');
 const session = require('express-session');
 const flash = require('connect-flash');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
+
 const passport = require('passport');
 const initializePassport = require('./passport-config');
 
@@ -17,8 +21,6 @@ const indexRouter = require('./routes/index');
 const bookmarksRouter = require('./routes/bookmarks');
 
 const app = express();
-
-dotenv.config();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
