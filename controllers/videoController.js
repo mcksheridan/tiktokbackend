@@ -14,19 +14,9 @@ const app = express();
 const async = require('async');
 const fetch = require('node-fetch');
 
-const Rollbar = require('rollbar');
-
-const rollbar = new Rollbar({
-  accessToken: process.env.ROLLBAR_KEY,
-  captureUncaught: true,
-  captureUnhandledRejections: true,
-});
-
-const logErrors = (level, info, ...params) => {
-  rollbar[level](info, ...params);
-};
-
 const db = require('../db');
+
+const { logLevel, sendToLog } = require('./util/logging');
 
 const {
   checkFileData, extractLikeListData, createVideoDateObjects, removeNullVideoDateEntries,
@@ -39,7 +29,6 @@ app.locals.videoLimitPerPage = 15;
 const { videoLimitPerPage } = app.locals;
 
 exports.index = (req, res) => {
-  logErrors('error', 'Testing the log error function', { testParameter: 'This is a test' }, { testParamterTwo: 'This is also a test. ' });
   const page = parseInt(req.params.page, 10);
   const values = [req.user.user_id];
   async.parallel({
@@ -377,7 +366,7 @@ exports.video_multiadd_post = function (req, res) {
       const redirectedUrl = await response.url;
       return redirectedUrl;
     } catch (error) {
-      console.error(error.message);
+      sendToLog(logLevel.critical, error.name, { message: error.message });
     }
     return undefined;
   };
@@ -389,7 +378,7 @@ exports.video_multiadd_post = function (req, res) {
       const tiktokData = await tiktokResponse.json();
       return tiktokData;
     } catch (error) {
-      console.error(error.message);
+      sendToLog(logLevel.critical, error.name, { message: error.message });
       return utilVariables.ERROR_MSG.api.tiktok;
     }
   };
@@ -422,7 +411,7 @@ exports.video_multiadd_post = function (req, res) {
       const results = query.rows;
       return results.length > 0;
     } catch (error) {
-      console.error(error.stack);
+      sendToLog(logLevel.critical, error.name, { stack: error.stack });
       res.status(500).send(utilVariables.ERROR_MSG.database.read);
     }
     return true;
@@ -439,7 +428,7 @@ exports.video_multiadd_post = function (req, res) {
       }
       return false;
     } catch (error) {
-      console.error(error.stack);
+      sendToLog(logLevel.critical, error.name, { stack: error.stack });
       res.status(500).send(utilVariables.ERROR_MSG.database.read);
     }
     return true;
@@ -451,9 +440,9 @@ exports.video_multiadd_post = function (req, res) {
       video.authorName, video.dateAdded];
     try {
       await db.query(text, values);
-      console.log('Video added to all videos');
+      sendToLog(logLevel.info, 'Video added to all videos');
     } catch (error) {
-      console.error(error.stack);
+      sendToLog(logLevel.critical, error.name, { stack: error.stack });
       res.status(500).send(utilVariables.ERROR_MSG.database.write);
     }
   };
@@ -463,9 +452,9 @@ exports.video_multiadd_post = function (req, res) {
     const values = [userId, video.id, video.dateBookmarked];
     try {
       await db.query(text, values);
-      console.log('Video added to user\'s videos!');
+      sendToLog(logLevel.info, 'Video added to user\'s videos!');
     } catch (error) {
-      console.error(error.stack);
+      sendToLog(logLevel.critical, error.name, { stack: error.stack });
       res.status(500).send(utilVariables.ERROR_MSG.database.write);
     }
   };
@@ -473,23 +462,23 @@ exports.video_multiadd_post = function (req, res) {
   const addVideo = async (isUsersVideosDuplicate, isAllVideosDuplicate, video, userId) => {
     if (!isUsersVideosDuplicate) {
       if (!isAllVideosDuplicate) {
-        console.log('This video should be added to the general database');
+        sendToLog(logLevel.info, 'This video should be added to the general database');
         try {
           await addVideoToAllVideos(video);
         } catch (error) {
-          console.error(error.stack);
+          sendToLog(logLevel.critical, error.name, { stack: error.stack });
         }
       }
-      console.log('This video should be added to the user\'s videos');
+      sendToLog(logLevel.info, 'This video should be added to the user\'s videos');
       try {
         await addVideoToUsersVideos(userId, video);
         return;
       } catch (error) {
-        console.error(error.stack);
+        sendToLog(logLevel.critical, error.name, { stack: error.stack });
       }
     }
     const videoExistsInDatabaseMessage = 'This video already exists in the database';
-    console.log(videoExistsInDatabaseMessage);
+    sendToLog(logLevel.info, videoExistsInDatabaseMessage);
     return videoExistsInDatabaseMessage;
   };
 
@@ -504,7 +493,7 @@ exports.video_multiadd_post = function (req, res) {
           newVideo.id = getTiktokId(videoDateArray[queuePosition].video);
           newVideo.url = `${newVideo.authorUrl}/video/${newVideo.id}`;
           newVideo.dateAdded = getDateAddedFromTikTokId(newVideo.id);
-          console.log(`Video ${queuePosition} processed: ${newVideo.url}`);
+          sendToLog(logLevel.info, `Video ${queuePosition} processed: ${newVideo.url}`);
           const isUsersVideosDuplicate = checkUsersVideosForDuplicates(req.user.user_id,
             newVideo.id);
           const isAllVideosDuplicate = checkAllVideosForDuplicates(newVideo.id);
@@ -512,7 +501,7 @@ exports.video_multiadd_post = function (req, res) {
         }
         queuePosition += 1;
         const queueRemainingVariable = queueRemaining - 1;
-        console.log(`There are ${queueRemainingVariable} videos remaining`);
+        sendToLog(logLevel.info, `There are ${queueRemainingVariable} videos remaining`);
         processVideos(queueRemainingVariable, videoDateArray);
       }
     }, 500);
