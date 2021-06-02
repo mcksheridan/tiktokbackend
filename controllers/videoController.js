@@ -425,7 +425,7 @@ exports.video_multiadd_post = function (req, res) {
       console.error(error.stack);
       res.status(500).send(utilVariables.ERROR_MSG.database.read);
     }
-    return undefined;
+    return true;
   };
 
   const checkAllVideosForDuplicates = async (videoId) => {
@@ -442,7 +442,7 @@ exports.video_multiadd_post = function (req, res) {
       console.error(error.stack);
       res.status(500).send(utilVariables.ERROR_MSG.database.read);
     }
-    return undefined;
+    return true;
   };
 
   const addVideoToAllVideos = async (video) => {
