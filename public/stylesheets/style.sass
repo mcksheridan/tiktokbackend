@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap')
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons')
+@import 'tools/mixins'
 
 $tiktokred: #fe2c55 // #ee15d2
 $tiktokblue: #69c9d0
@@ -345,22 +346,13 @@ body
   flex-direction: column
 
 .user-account__return-button
+  @include style-button-as-link
   order: -1
   margin: 0 auto
 
 .user-account__form-toggle
-  border: 0px
-  padding: 0px
-  text-decoration: underline
-  cursor: pointer
-  background-color: inherit
+  @include style-button-as-link
   margin-bottom: 5vh
-  &:hover
-    background-color: $tiktokblue
-    color: #000
-  &:active
-    background-color: $tiktokred
-    color: #fff
 
 .change-username__form
   display: none

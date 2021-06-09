@@ -302,15 +302,30 @@ body {
   width: 50vw;
   min-width: 300px;
   margin-left: auto;
-  margin-right: auto; }
+  margin-right: auto;
+}
 
 .user-account__header {
   display: flex;
-  flex-direction: column; }
+  flex-direction: column;
+}
 
 .user-account__return-button {
+  border: 0px;
+  padding: 0px;
+  text-decoration: underline;
+  cursor: pointer;
+  background-color: inherit;
   order: -1;
   margin: 0 auto;
+}
+.user-account__return-button:hover {
+  background-color: #69c9d0;
+  color: #000;
+}
+.user-account__return-button:active {
+  background-color: #fe2c55;
+  color: #fff;
 }
 
 .user-account__form-toggle {
