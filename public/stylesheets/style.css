@@ -302,7 +302,17 @@ body {
   width: 50vw;
   min-width: 300px;
   margin-left: auto;
-  margin-right: auto; }
+  margin-right: auto;
+}
+
+.user-account__header {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-account__return-button {
+  order: -1;
+}
 
 .user-account_navigation {
   padding-left: 0;
