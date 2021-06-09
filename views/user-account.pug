@@ -14,33 +14,33 @@ div.user-account
     .user-account__option.change-username
       button(type='button', class='user-account__form-toggle change-username__button') Change Username
         span.material-icons.change-username__arrow expand_more
-            div.form-group.change-username__form
-                form(method='POST' action='/../bookmarks/user/change-username')
-                    div.form-group
-                        label(for='new_username')
-                        input.form-control(type='text', placeholder=`${data.get_user_info.username}` name='new_username' required)
-                        br
-                        button(type='submit', class='form-button') Change Username
+      div.form-group.change-username__form
+        form(method='POST' action='/../bookmarks/user/change-username')
+          div.form-group
+            label(for='new_username')
+            input.form-control(type='text', placeholder=`${data.get_user_info.username}` name='new_username' required)
+            br
+            button(type='submit', class='form-button') Change Username
     .user-account__option.change-password
       button(type='button', class='user-account__form-toggle change-password__button') Change Password
         span.material-icons.change-password__arrow expand_more
-            div.form-group.change-password__form
-                form(method='POST' action='/../bookmarks/user/change-password')
-                    div.form-group
-                        labor(for='old_password') Current Password:
-                        input.form-control(type='password', placeholder='' name='old_password')
-                        label(for='new_password') New Password:
-                        input.form-control(type='password', placeholder='' name='new_password')
-                        br
-                        button(type='submit', class='form-button') Change Password
+      div.form-group.change-password__form
+        form(method='POST' action='/../bookmarks/user/change-password')
+          div.form-group
+            label(for='old_password') Current Password:
+            input.form-control(type='password', placeholder='' name='old_password')
+            label(for='new_password') New Password:
+            input.form-control(type='password', placeholder='' name='new_password')
+            br
+            button(type='submit', class='form-button') Change Password
     .user-account__option.delete-account
       button(type='button', class='user-account__form-toggle delete-account__button') Delete Account
         span.material-icons.delete-account__arrow expand_more
-            p #[strong Warning:] It is impossible to recover deleted accounts!
-            div.form-group.delete-account__form
-                form(method='POST' action='/../bookmarks/user/delete-account')
-                    div.form-group
-                        label(for='email') Enter Email to Confirm Deletion:
-                        input.form-control(type='email', name='email')
-                        br
-                        button(type='submit', class='form-button') Delete My Account
+      p #[strong Warning:] It is impossible to recover deleted accounts!
+      div.form-group.delete-account__form
+        form(method='POST' action='/../bookmarks/user/delete-account')
+          div.form-group
+            label(for='email') Enter Email to Confirm Deletion:
+            input.form-control(type='email', name='email')
+            br
+            button(type='submit', class='form-button') Delete My Account
