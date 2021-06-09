@@ -32,7 +32,6 @@ app.use(express.json());
 initializePassport(passport);
 
 app.use(express.urlencoded({ extended: false }));
-app.use(flash());
 app.use(sassMiddleware({
   src: path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public'),
