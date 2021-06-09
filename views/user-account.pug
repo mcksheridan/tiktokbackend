@@ -14,7 +14,7 @@ div.user-account
     .user-account__option.change-username
       button(type='button', class='user-account__form-toggle change-username__button') Change Username
         span.material-icons.change-username__arrow expand_more
-            div.form-group.form-change-username  
+            div.form-group.change-username__form
                 form(method='POST' action='/../bookmarks/user/change-username')
                     div.form-group
                         label(for='new_username')
@@ -24,7 +24,7 @@ div.user-account
     .user-account__option.change-password
       button(type='button', class='user-account__form-toggle change-password__button') Change Password
         span.material-icons.change-password__arrow expand_more
-            div.form-group.form-change-password  
+            div.form-group.change-password__form
                 form(method='POST' action='/../bookmarks/user/change-password')
                     div.form-group
                         labor(for='old_password') Current Password:
@@ -37,7 +37,7 @@ div.user-account
       button(type='button', class='user-account__form-toggle delete-account__button') Delete Account
         span.material-icons.delete-account__arrow expand_more
             p #[strong Warning:] It is impossible to recover deleted accounts!
-            div.form-group.form-delete-account 
+            div.form-group.delete-account__form
                 form(method='POST' action='/../bookmarks/user/delete-account')
                     div.form-group
                         label(for='email') Enter Email to Confirm Deletion:
