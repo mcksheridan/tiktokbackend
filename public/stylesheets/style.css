@@ -314,35 +314,29 @@ body {
   border: 0px;
   padding: 0px;
   text-decoration: underline;
-  cursor: pointer;
   background-color: inherit;
   order: -1;
   margin: 0 auto;
 }
 .user-account__return-button:hover {
-  background-color: #69c9d0;
-  color: #000;
+  cursor: pointer;
 }
 .user-account__return-button:active {
-  background-color: #fe2c55;
-  color: #fff;
+  color: #fe2c55;
 }
 
 .user-account__form-toggle {
   border: 0px;
   padding: 0px;
   text-decoration: underline;
-  cursor: pointer;
   background-color: inherit;
   margin-bottom: 5vh;
 }
 .user-account__form-toggle:hover {
-  background-color: #69c9d0;
-  color: #000;
+  cursor: pointer;
 }
 .user-account__form-toggle:active {
-  background-color: #fe2c55;
-  color: #fff;
+  color: #fe2c55;
 }
 
 .change-username__form, .delete-account__form, .change-password__form {
