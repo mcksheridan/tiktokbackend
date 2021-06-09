@@ -435,11 +435,11 @@ window.onload = function tiktok() {
     hideUserAccount()
 
     const showUserAccountForm = (action) => {
-        const arrowDirection = document.querySelector(`.user-account_${action}-arrow`)
+        const arrowDirection = document.querySelector(`.${action}__arrow`)
         if (arrowDirection.innerText === 'expand_more') {
-            document.querySelector(`.user-account_${action}`).addEventListener('click', () => {
-                document.querySelector(`.form-${action}`).style.display = 'block'
-                document.querySelector(`.user-account_${action}-arrow`).innerText = 'expand_less'
+            document.querySelector(`.${action}__button`).addEventListener('click', () => {
+                document.querySelector(`.${action}__form`).style.display = 'block'
+                document.querySelector(`.${action}__arrow`).innerText = 'expand_less'
             })
         }
     }
@@ -449,7 +449,7 @@ window.onload = function tiktok() {
     showUserAccountForm('delete-account')
 
     const hideUserAccountForm = (action) => {
-        const arrowDirection = document.querySelector(`.user-account_${action}-arrow`)
+        const arrowDirection = document.querySelector(`.${action}__arrow`)
         if (arrowDirection.innerText === 'expand_less') {
             document.querySelector(`.user-account_${action}`).addEventListener('click', () => {
                 console.log('something')
