@@ -310,6 +310,7 @@ body {
 
 .user-account__return-button {
   order: -1;
+  margin: 0 auto;
 }
 
 .user-account__form-toggle {
