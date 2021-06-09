@@ -1,15 +1,15 @@
 div.user-account
 
-    header(class='user-account__header')
+    header(class='user-account__header account-details')
 
-      h2(class='user-account_header') Account Details
+      h2(class='account-details__header') Account Details
 
-      p.user-account_details
+      p.account-details__stats
         | #[strong Username]: !{data.get_user_info.username}
         br
         | #[strong Member Since]: !{data.get_user_info.created_at}
 
-      button(type='button', class='user-account_video-return-link') (Return to Videos)
+      button(type='button', class='user-account__return-button') (Return to Videos)
 
     ul.user-account_navigation
         li.user-account_navigation-option

@@ -416,7 +416,7 @@ window.onload = function tiktok() {
     const userAccount = document.querySelector('.user-account')
     const tiktokContainer = document.querySelector('.tiktok-container')
     const userAccountLink = document.querySelector('.content_info-user-account-link')
-    const videoReturnLink = document.querySelector('.user-account_video-return-link')
+    const videoReturnLink = document.querySelector('.user-account__return-button')
 
     const showUserAccount = () => {
         userAccountLink.addEventListener('click', () => {
