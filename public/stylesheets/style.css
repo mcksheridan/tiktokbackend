@@ -313,7 +313,20 @@ body {
 }
 
 .user-account__form-toggle {
+  border: 0px;
+  padding: 0px;
+  text-decoration: underline;
+  cursor: pointer;
+  background-color: inherit;
   margin-bottom: 5vh;
+}
+.user-account__form-toggle:hover {
+  background-color: #69c9d0;
+  color: #000;
+}
+.user-account__form-toggle:active {
+  background-color: #fe2c55;
+  color: #fff;
 }
 
 .change-username__form, .delete-account__form, .change-password__form {
