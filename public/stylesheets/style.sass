@@ -347,22 +347,14 @@ body
 .user-account__return-button
   order: -1
 
-.user-account_navigation
-  padding-left: 0
-  list-style-type: none
-
-.user-account_navigation-option
+.user-account__form-toggle
   margin-bottom: 5vh
 
-.user-account_navigation-link
-  text-decoration: none
-  color: black
-
-.form-change-username
+.change-username__form
   display: none
 
-.form-change-password
-  @extend .form-change-username
+.change-password__form
+  @extend .change-username__form
 
-.form-delete-account
-  @extend .form-change-username
+.delete-account__form
+  @extend .change-username__form

@@ -312,18 +312,10 @@ body {
   order: -1;
 }
 
-.user-account_navigation {
-  padding-left: 0;
-  list-style-type: none; }
+.user-account__form-toggle {
+  margin-bottom: 5vh;
+}
 
-.user-account_navigation-option {
-  margin-bottom: 5vh; }
-
-.user-account_navigation-link {
-  text-decoration: none;
-  color: black; }
-
-.form-change-username, .form-change-password, .form-delete-account {
-  display: none; }
-
-/*# sourceMappingURL=style.css.map */
+.change-username__form, .delete-account__form, .change-password__form {
+  display: none;
+}/*# sourceMappingURL=style.css.map */
