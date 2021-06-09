@@ -13,6 +13,17 @@ const ERROR_MSG = {
     read: 'There was an error reading from the database',
     write: 'There was an error writing to the database',
   },
+  login: {
+    foundEmail: 'An account has already been registered with this email address.',
+    noEmail: 'No account with that email address found.',
+  },
+  password: {
+    invalidReset: 'Invalid or expired reset link.',
+    mismatch: 'Passwords don\'t match',
+  },
+  delete: {
+    wrongEmail: 'Please enter your correct email address',
+  },
 };
 
 module.exports = {

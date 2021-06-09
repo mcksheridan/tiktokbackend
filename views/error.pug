@@ -1,7 +1,10 @@
 extends header
 
 block layout
-  h1= message
-  h2= error.status
-  pre #{error.stack}
-  p= error
+  if (error)
+    h1= message
+    h2= error.status
+    pre #{error.stack}
+    p= error
+  if (messages)
+    p.messages= messages

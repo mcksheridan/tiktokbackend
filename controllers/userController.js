@@ -6,6 +6,7 @@ const passport = require('passport');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const db = require('../db');
+const utilVariables = require('./util/variables');
 
 const currentTimeInSqlFormat = () => {
   const currentTime = Date.now();
@@ -31,7 +32,7 @@ exports.register_post = [
     if (!errors.isEmpty()) {
       const errorMessage = `${errors.errors['0'].msg}.
             You entered: ${errors.errors['0'].value}`;
-      res.status(200).send(errorMessage);
+      res.render('register', { title: 'TikTok Favorites', messages: errorMessage });
     }
     async.waterfall([
       function checkForDuplicateEmails(callback) {
@@ -42,8 +43,7 @@ exports.register_post = [
             const userQuery = await db.query(text, values);
             const userQueryLength = userQuery.rows.length;
             if (userQueryLength > 0) {
-              const foundEmailMessage = 'An account has already been registered with this email address.';
-              res.status(200).send(foundEmailMessage);
+              res.render('register', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.login.foundEmail });
             }
             callback(null);
           } catch (error) {
@@ -88,12 +88,13 @@ exports.register_post = [
   },
 ];
 
-exports.login_get = (req, res) => res.render('login', { title: 'Login' });
+exports.login_get = (req, res) => res.render('login', { title: 'Login', messages: req.flash('error') });
 
 exports.login_post = [
   passport.authenticate('local', {
     session: true,
     failureRedirect: '/login',
+    failureFlash: true,
   }), (req, res) => {
     res.redirect('/');
   },
@@ -115,8 +116,7 @@ exports.forgot_password_post = (req, res, next) => {
             const userEmail = userQuery.rows[0].email;
             callback(null, userEmail);
           } else {
-            req.flash('info', 'No account with that email address found.');
-            res.redirect('forgot-password');
+            res.render('forgot-password', { title: 'Forgotten Password', messages: utilVariables.ERROR_MSG.login.noEmail });
           }
         } catch (error) {
           res.status(500).send(error.stack);
@@ -174,7 +174,7 @@ exports.forgot_password_post = (req, res, next) => {
                 Your password will remain unchanged.`,
       };
       emailTransporter.sendMail(mailOptions, (error) => {
-        req.flash('info', `An email has been sent to ${userEmail} with further instructions.`);
+        res.render('login', { title: 'Login', messages: `An email has been sent to ${userEmail} with further instructions.` });
         callback(error, callback);
       });
     },
@@ -192,8 +192,8 @@ exports.reset_password_get = async (req, res) => {
       [req.params.token, currentTimeInSqlFormat()]);
     const usersFound = userWithUnexpiredTokenQuery.rows.length;
     if (usersFound === 0) {
-      req.flash('error', 'Invalid or expired reset link.');
-      return res.redirect('/../forgot-password');
+      res.render('forgot-password', { title: 'Forgotten Password', messages: utilVariables.ERROR_MSG.password.invalidReset });
+      return;
     }
     res.render('reset-password', { user: req.user, title: 'Reset Password' });
   } catch (error) {
@@ -210,7 +210,7 @@ exports.reset_password_post = [
     if (!errors.isEmpty()) {
       const errorMessage = `${errors.errors['0'].msg}.
             You entered: ${errors.errors['0'].value}`;
-      res.status(200).send(errorMessage);
+      res.render('reset-password', { title: 'Reset Password', messages: errorMessage });
     }
     async.waterfall([
       (callback) => {
@@ -231,8 +231,7 @@ exports.reset_password_post = [
               [req.params.token, currentTimeInSqlFormat()]);
             const userTokenQueryLength = userTokenQuery.rows.length;
             if (userTokenQueryLength === 0) {
-              req.flash('info', 'Reset link is invalid or expired');
-              res.redirect('/forgot-password');
+              res.render('forgot-password', { title: 'Forgotten Password', messages: utilVariables.ERROR_MSG.password.invalidReset });
             } else {
               const userEmail = userTokenQuery.rows[0].email;
               callback(null, hashedPassword, userEmail);
@@ -278,14 +277,14 @@ exports.reset_password_post = [
 
 exports.change_username_post = [
   validator.body('new_username').trim()
-    .isLength({ min: 1, max: 100 }).withMessage('Please enter a username between 3 and 100 characters.'),
+    .isLength({ min: 3, max: 100 }).withMessage('Please enter a username between 3 and 100 characters.'),
   validator.sanitizeBody('new_username'),
   (req, res) => {
     const errors = validator.validationResult(req);
     if (!errors.isEmpty()) {
       const errorMessage = `${errors.errors['0'].msg}.
             You entered: ${errors.errors['0'].value}`;
-      res.status(200).send(errorMessage);
+      res.render('error', { title: 'TikTok Favorites', messages: errorMessage });
     }
     const changeUsername = async () => {
       try {
@@ -350,7 +349,7 @@ exports.change_password_post = [
               res.redirect('/');
             }
             if (!existingPasswordMatch()) {
-              res.send('Passwords don\'t match');
+              res.render('error', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.password.mismatch });
             }
           } catch (error) {
             console.error('Something went wrong with the password update!');
@@ -375,8 +374,7 @@ exports.delete_user_post = (req, res) => {
     };
     deleteUser();
   } else {
-    // Change to a flash message!!
-    res.send('Please enter the email address associated with your account.');
+    res.render('error', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.delete.wrongEmail });
   }
 };
 

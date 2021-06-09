@@ -13,5 +13,8 @@ block layout
             input(type='password', name='password', required, minlength='6', maxlength='100').registration-form_input
             button(type='submit', class='form-button').registration-form_button Register
 
-    p.switch-login-method Already have an account? 
+    p.switch-login-method Already have an account?
         a(href='login', class='switch-login-method_link') Log in
+
+    if (messages)
+      p=messages
