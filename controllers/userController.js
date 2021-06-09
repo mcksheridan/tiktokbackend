@@ -363,6 +363,17 @@ exports.change_password_post = [
 ];
 
 exports.delete_user_post = (req, res) => {
+  const checkEmailMatch = async (user, email) => {
+    try {
+      const text = 'SELECT * FROM users WHERE user_id = $1 AND email = $2';
+      const values = [user, email];
+      const query = await db.query(text, values);
+      const results = query.rows;
+      return results.length > 0;
+    } catch (error) {
+      res.status(500).send(error.stack);
+    }
+  };
   if (req.body.email === req.user.email) {
     const deleteUser = async () => {
       try {
