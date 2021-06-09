@@ -11,8 +11,7 @@ div.user-account
 
       button(type='button', class='user-account__return-button') (Return to Videos)
 
-    ul.user-account_navigation
-        li.user-account_navigation-option
+    .user-account__option.change-username
             a(href='#').user-account_navigation-link.user-account_change-username Change Username
                 span.material-icons.user-account_change-username-arrow expand_more
             div.form-group.form-change-username  
@@ -22,7 +21,7 @@ div.user-account
                         input.form-control(type='text', placeholder=`${data.get_user_info.username}` name='new_username' required)
                         br
                         button(type='submit', class='form-button') Change Username
-        li.user-account_navigation-option
+    .user-account__option.change-password
             a(href='#').user-account_navigation-link.user-account_change-password Change Password
                 span.material-icons.user-account_change-password-arrow expand_more
             div.form-group.form-change-password  
@@ -34,7 +33,7 @@ div.user-account
                         input.form-control(type='password', placeholder='' name='new_password')
                         br
                         button(type='submit', class='form-button') Change Password
-        li.user-account_navigation-option
+    .user-account__option.delete-account
             a(href='#').user-account_navigation-link.user-account_delete-account Delete Account
                 span.material-icons.user-account_delete-account-arrow expand_more
             p #[strong Warning:] It is impossible to recover deleted accounts!
