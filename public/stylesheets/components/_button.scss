@@ -1,0 +1,14 @@
+.button {
+  &--link {
+    @include unbuttonize;
+    text-decoration: underline;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    &:active {
+      color: $tiktokred;
+    }
+  }
+}

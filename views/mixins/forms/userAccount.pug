@@ -1,0 +1,10 @@
+mixin userAccountForm(actionName, actionUrl, ...formLabelInputOptionObjects)
+  .user-account__option
+    button(type='button', class='user-account__toggle')= actionName
+      span.material-icons.material-icons--closed expand_more
+    form(method='POST', action=actionUrl, class='column-form')
+      each labelInputObject in formLabelInputOptionObjects
+        label(for=labelInputObject.name)= labelInputObject.label
+        input(class='column-form__text-input', type=labelInputObject.type, placeholder=labelInputObject.placeholder, name=labelInputObject.name, minlength=labelInputObject.minlength, maxlength=labelInputObject.maxlength, required)
+      br
+      button(type='submit', class='column-form__submit')= actionName

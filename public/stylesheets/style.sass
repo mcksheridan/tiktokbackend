@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap')
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons')
+@import 'settings/variables'
+@import 'tools/mixins'
+@import 'generic/material-icons'
+@import 'components/button'
+@import 'components/column-form'
+@import 'components/user-account'
 
-$tiktokred: #fe2c55 // #ee15d2
-$tiktokblue: #69c9d0
-$tiktoksize: (100vmin / 3)
-
-  
 body
   margin: 0px
   padding: 0px
@@ -332,20 +332,9 @@ body
   text-decoration: none
   color: white
 
-.user-account
-  display: none
-  text-align: center
-  width: 50vw;
-  min-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
-
 .user-account_navigation
   padding-left: 0
   list-style-type: none
-
-.user-account_navigation-option
-  margin-bottom: 5vh
 
 .user-account_navigation-link
   text-decoration: none

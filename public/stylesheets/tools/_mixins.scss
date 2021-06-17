@@ -1,0 +1,15 @@
+// Unbuttonize mixin from Zastrow: https://gist.github.com/zastrow/bb43d2b256d52738e0ffdee7f825e79f
+
+@mixin unbuttonize {
+  // This removes styles added by default to button elements.
+  // For when something should semantically be a button,
+  // but isn't buttony in appearance.
+  background-color: transparent;
+  border: none;
+  margin: 0;
+  padding: 0;
+  text-align: inherit;
+  font: inherit;
+  border-radius: 0;
+  appearance: none; // Just in case we missed anything.
+}

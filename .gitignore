@@ -84,3 +84,6 @@ middleware/
 controllers/old_videoController.js
 
 db/tables.txt
+
+public/stylesheets/style.css
+public/stylesheets/style.css.map

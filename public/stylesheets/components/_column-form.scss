@@ -1,0 +1,22 @@
+.column-form {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 3%;
+
+  &__text-input {
+    font-size: 1rem;
+  }
+
+  &__submit {
+    font: 1rem "Lucida Grande", Helvetica, Arial, sans-serif;
+    background-color: $tiktokred;
+    color: #fff;
+    border: 0px;
+    font-weight: bold;
+    padding: 2%;
+
+    &:active {
+      color: #ccc;
+    }
+  }
+}
