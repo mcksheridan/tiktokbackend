@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const db = require('../db');
 const utilVariables = require('./util/variables');
+const { logLevel, sendToLog } = require('./util/logging');
 
 const currentTimeInSqlFormat = () => {
   const currentTime = Date.now();
@@ -371,22 +372,26 @@ exports.delete_user_post = (req, res) => {
       const results = query.rows;
       return results.length > 0;
     } catch (error) {
+      sendToLog(logLevel.critical, error.name, { message: error.message });
       res.status(500).send(error.stack);
     }
   };
-  if (req.body.email === req.user.email) {
-    const deleteUser = async () => {
+  const deleteUser = async () => {
+    const isEmailMatch = await checkEmailMatch(req.user.user_id, req.body.email);
+    if (isEmailMatch) {
       try {
         await db.query('DELETE FROM users WHERE user_id = $1', [req.user.user_id]);
+        passport.deserializeUser((id, done) => done(null, false));
         res.redirect('/register');
       } catch (error) {
+        sendToLog(logLevel.critical, error.name, { message: error.message });
         res.status(500).send(error.stack);
       }
-    };
-    deleteUser();
-  } else {
-    res.render('error', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.delete.wrongEmail });
-  }
+    } else {
+      res.render('error', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.delete.wrongEmail });
+    }
+  };
+  deleteUser();
 };
 
 exports.checkAuthentication = (req, res, next) => {
