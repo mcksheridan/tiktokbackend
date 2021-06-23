@@ -307,59 +307,42 @@ exports.change_password_post = [
     .isLength({ min: 6, max: 100 }).withMessage('Please enter a new password between 6 and 100 characters.'),
   validator.sanitizeBody('new_password'),
   (req, res) => {
-    async.waterfall([
-      (callback) => {
-        const hashNewPassword = (async () => {
-          try {
-            const hashedNewPassword = await bcrypt.hash(req.body.new_password, 10);
-            callback(null, hashedNewPassword);
-          } catch (status) {
-            const awaitError = `Unsuccessful await attempt: \n
-                        Status: ${status}`;
-            res.status(500).send(awaitError);
-          }
-        });
-        hashNewPassword();
-      },
-      (hashedNewPassword) => {
-        const existingUserPassword = async () => {
-          try {
-            const passwordQuery = await db.query('SELECT password FROM users WHERE user_id = $1', [req.user.user_id]);
-            const userPassword = passwordQuery.rows[0].password;
-            const result = userPassword.toString();
-            return result;
-          } catch (error) {
-            res.status(500).send(error.stack);
-          }
-        };
-        const existingPasswordMatch = async () => {
-          try {
-            // eslint-disable-next-line max-len
-            const result = await bcrypt.compare(req.body.old_password, await existingUserPassword());
-            return result;
-          } catch (error) {
-            console.error('Something went wrong with the password comparison!');
-            res.status(500).send(error.stack);
-          }
-        };
-        const updatePassword = async () => {
-          try {
-            if (existingPasswordMatch()) {
-              await db.query('UPDATE users SET password = $1 WHERE user_id = $2',
-                [hashedNewPassword, req.user.user_id]);
-              res.redirect('/');
-            }
-            if (!existingPasswordMatch()) {
-              res.render('error', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.password.mismatch });
-            }
-          } catch (error) {
-            console.error('Something went wrong with the password update!');
-            res.status(500).send(error.stack);
-          }
-        };
-        updatePassword();
-      },
-    ]);
+    const errors = validator.validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessage = `${errors.errors['0'].msg}.
+            You entered: ${errors.errors['0'].value}`;
+      return res.render('error', { title: 'TikTok Favorites', messages: errorMessage });
+    }
+    const hashPassword = async (password) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      return hashedPassword;
+    };
+    const getUserPasswordFromUserId = async (userId) => {
+      const query = await db.query('SELECT password FROM users WHERE user_id = $1', [userId]);
+      const results = query.rows[0].password;
+      const userPassword = results.toString();
+      return userPassword;
+    };
+    const checkPasswordMatch = async (userInputOldPassword, actualOldPassword) => {
+      const result = await bcrypt.compare(userInputOldPassword, actualOldPassword);
+      return result;
+    };
+    const handleUpdatePasswordRequest = async (userId, userInputOldPassword, newPassword) => {
+      const userPassword = await getUserPasswordFromUserId(userId);
+      const isPasswordMatch = await checkPasswordMatch(userInputOldPassword, userPassword);
+      if (isPasswordMatch) {
+        const hashedNewPassword = await hashPassword(newPassword);
+        await db.query('UPDATE users SET password = $1 WHERE user_id = $2', [hashedNewPassword, userId]);
+        return res.redirect('/');
+      }
+      res.render('error', { title: 'TikTok Favorites', messages: utilVariables.ERROR_MSG.password.mismatch });
+    };
+    try {
+      handleUpdatePasswordRequest(req.user.user_id, req.body.old_password, req.body.new_password);
+    } catch (error) {
+      sendToLog(logLevel.critical, error.name, { message: error.message });
+      res.status(500).send(error.stack);
+    }
   },
 ];
 
