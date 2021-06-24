@@ -22,7 +22,7 @@ const ERROR_MSG = {
     mismatch: 'Passwords don\'t match',
   },
   delete: {
-    wrongEmail: 'Please enter your correct email address',
+    wrongEmail: 'Please enter the email address associated with your account.',
   },
 };
 
