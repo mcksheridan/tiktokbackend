@@ -8,7 +8,7 @@ block layout
     form(method='POST' action='/login')
         div.form-group.login-form
             label(for='email') Email:
-            input(type='email', name='email', required).login-form_input
+            input(type='email', name='email', autocomplete='email', required).login-form_input
             label(for='password') Password:
             input(type='password', name='password', required).login-form_input
             button(type='submit', class='form-button') Login
