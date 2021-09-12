@@ -1,27 +1,32 @@
-extends layout
-include mixins/pages
-include mixins/tiktokContainer
+extends layout/header
+include layout/mixins/navigation
+include layout/mixins/popup-container
+include layout/mixins/tiktok-popup
+include layout/mixins/pages
+include layout/mixins/tiktok-container
+block layout
 
-block content
+  +navigation({
+    list: true,
+  })
 
-    .tiktok-popup
-      p.tiktok-popup_close
-        a(href='#', class='popup_close-link')
-          span.material-icons close
-      .tiktok-popup_video
-      p.tiktok-popup_link
+  +popupContainer({
+    list: true,
+  })
 
-    div.content
-      if error
-        p.content_info Error getting dynamic content.
+  +tiktokPopup
+
+  .content
+    if error
+      p.content_info Error getting dynamic content.
+    else
+      if data.count_videos === 1
+        p.content_info #[strong 1] video in #[strong !{data.current_list['name']}]
       else
-        if data.count_videos === 1
-          p.content_info #[strong 1] video in #[strong !{data.current_list['name']}]
-        else
-          p.content_info #[strong !{data.count_videos}] videos in #[strong !{data.current_list['name']}]
-            if data.pagination['previous_page'] != undefined
-              br
-              a(href=data.pagination['previous_page'], class='content_info-link') Back
+        p.content_info #[strong !{data.count_videos}] videos in #[strong !{data.current_list['name']}]
+          if data.pagination['previous_page'] != undefined
+            br
+            a(href=data.pagination['previous_page'], class='content_info-link') Back
 
-        +tiktokContainer(data.get_videos)
-        +pages(data.count_videos/data.pagination['video_limit'])
+      +tiktokContainer(data.get_videos)
+      +pages(data.count_videos/data.pagination['video_limit'])

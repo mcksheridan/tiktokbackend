@@ -1,4 +1,4 @@
-extends header
+extends layout/header
 block layout
 
     if messages
@@ -13,8 +13,8 @@ block layout
             input(type='password', name='password', required).login-form_input
             button(type='submit', class='form-button') Login
 
-    p.switch-login-method Don't have an account? 
+    p.switch-login-method Don't have an account?&nbsp;
         a(href='register', class='switch-login-method_link') Register
 
-    p.switch-login-method Forgot your password? 
+    p.switch-login-method Forgot your password?&nbsp;
         a(href='forgot-password', class='switch-login-method_link') Reset account

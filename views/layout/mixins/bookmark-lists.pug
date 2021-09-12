@@ -1,0 +1,8 @@
+mixin bookmarkLists()
+  .bookmark-list--hidden
+    ul.bookmark-list_list
+      li
+        a(href=`/../bookmarks/1`).bookmark-list_link All Videos
+      each list in data.get_lists
+        li
+          a(href=`/../bookmarks/list/${list.list_id}`).bookmark-list_link !{list.name}

@@ -1,78 +1,37 @@
-include mixins/pages
-include mixins/tiktokContainer
-doctype html
-html(lang='en')
-  head
-    title= title
-    meta(charset='utf-8')
-    meta(name='viewport', content='width=device-width, initial-scale=1')
-    link(rel='stylesheet', href='../stylesheets/style.css')
-    script(src='../javascripts/tiktok.js', type='module')
-  body
-    div.header
-      h1= title
-    div.navigation
-      ul.navigation_list
-        li.navigation_option
-          a(href='#').material-icons.navigation_link.navigation_add-video library_add
-        li.navigation_option
-          a(href='#').material-icons.navigation_link.navigation_add-list create_new_folder
-        li.navigation_option
-          a(href='#').material-icons.navigation_link.navigation_move-video input
-        li.navigation_option
-          a(href='#').material-icons.navigation_link.navigation_delete-video delete
-        li.navigation_option
-          a(href='#').navigation_link-list
-            span.navigation_link-list--fulltitle All Videos
-            span.material-icons.navigation_link.navigation_link-list-button expand_more
-        li.navigation_option
-          a(href='#').material-icons.navigation_link.navigation_sort-video sort
-        form(method='POST' action='/bookmarks/video/search/1' class='navigation_search-form')
-          input.navigation_search-input(type='text', placeholder='Search creators and descriptions', name='video_search')
-          button(type='submit', class='navigation_search-button')
-            span.material-icons search
-        li.navigation_option
-          a(href='#').material-icons.navigation_link.navigation_link-check--unchecked check_box
+extends layout/header
+include layout/mixins/navigation
+include layout/mixins/bookmark-lists
+include layout/mixins/popup-container
+include layout/mixins/tiktok-popup
+include layout/mixins/pages
+include layout/mixins/tiktok-container
+block layout
 
-    .bookmark-list--hidden
-      ul.bookmark-list_list
-        each list in data.get_lists
-          li
-            a(href=`/../bookmarks/list/${list.list_id}`).bookmark-list_link !{list.name}
+  +navigation({
+    allVideos: true,
+  })
 
-    .popup
-      p.popup_close
-        a(href='#', class='popup_close-link')
-          span.material-icons close
-      p.popup_message
-      form.popup_form
-        select(name='move_destination', class='form_move-video')
-          each list in data.get_lists
-            option(value=`${list.list_id}`).form_move-video-option !{list.name}
-        button(class='popup_form-confirm form-button') Confirm
-      include add-video
-      include add-list
-      include sort-video
+  +bookmarkLists
 
-    .tiktok-popup
-      p.tiktok-popup_close
-        a(href='#', class='popup_close-link')
-          span.material-icons close
-      .tiktok-popup_video
-      p.tiktok-popup_link
-    
-    .content
-      if error
-        p.content_info Error getting dynamic content. !{error}
-      else
-        p.content_info #[strong !{data.count_videos}] videos in #[strong !{data.get_lists.length}] lists
-        p.content_info Hi, 
-          a(href='#', class='content_info-link content_info-user-account-link') !{data.get_user_info.username}
-          span  (
-            a(href='../logout', class='content_info-link') logout
-          span )
+  +popupContainer({
+    allVideos: true,
+    list: false,
+  })
 
-          include user-account
+  +tiktokPopup
 
-        +tiktokContainer(data.get_videos)
-        +pages(data.count_videos/data.pagination['video_limit'])
+  .content
+    if error
+      p.content_info Error getting dynamic content. !{error}
+    else
+      p.content_info #[strong !{data.count_videos}] videos in #[strong !{data.get_lists.length}] lists
+      p.content_info Hi,&nbsp;
+        a(href='#', class='content_info-link content_info-user-account-link') !{data.get_user_info.username}
+        span  (
+          a(href='../logout', class='content_info-link') logout
+        span )
+
+        include user-account
+
+      +tiktokContainer(data.get_videos)
+      +pages(data.count_videos/data.pagination['video_limit'])
