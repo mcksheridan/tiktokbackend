@@ -1,3 +1,6 @@
+import toggleUserAccountOptions from './user-account/toggleUserAccountOptions.js';
+import hideUserAccountForms from './user-account/hideUserAccountForms.js';
+
 window.onload = function tiktok() {
 
     const getVideoThumbnails = function() {
@@ -434,33 +437,9 @@ window.onload = function tiktok() {
     }
     hideUserAccount()
 
-    const showUserAccountForm = (action) => {
-        const arrowDirection = document.querySelector(`.user-account_${action}-arrow`)
-        if (arrowDirection.innerText === 'expand_more') {
-            document.querySelector(`.user-account_${action}`).addEventListener('click', () => {
-                document.querySelector(`.form-${action}`).style.display = 'block'
-                document.querySelector(`.user-account_${action}-arrow`).innerText = 'expand_less'
-            })
-        }
-    }
+    const userAccountForms = document.querySelectorAll('.user-account__option .column-form');
+    const userAccountButtons = document.querySelectorAll('.user-account__toggle');
 
-    showUserAccountForm('change-username')
-    showUserAccountForm('change-password')
-    showUserAccountForm('delete-account')
-
-    const hideUserAccountForm = (action) => {
-        const arrowDirection = document.querySelector(`.user-account_${action}-arrow`)
-        if (arrowDirection.innerText === 'expand_less') {
-            document.querySelector(`.user-account_${action}`).addEventListener('click', () => {
-                console.log('something')
-                document.querySelector(`.form-${action}`).style.display = 'none'
-                document.querySelector(`.user-account_${action}-arrow`).innerText = 'expand_more'
-            })
-        }
-    }
-
-    hideUserAccountForm('change-username')
-    hideUserAccountForm('change-password')
-    hideUserAccountForm('delete-account')
-
+    hideUserAccountForms(userAccountForms);
+    toggleUserAccountOptions(userAccountButtons);
 }

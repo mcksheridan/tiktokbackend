@@ -1,6 +1,6 @@
 mixin userAccountForm(actionName, actionUrl, ...formLabelInputOptionObjects)
   .user-account__option
-    button(type='button', class='user-account__toggle')= actionName
+    button(type='button', class='user-account__toggle', aria-expanded='false')= actionName
       span.material-icons.material-icons--closed expand_more
     form(method='POST', action=actionUrl, class='column-form')
       each labelInputObject in formLabelInputOptionObjects
