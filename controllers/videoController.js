@@ -494,9 +494,9 @@ exports.video_multiadd_post = function (req, res) {
           newVideo.url = `${newVideo.authorUrl}/video/${newVideo.id}`;
           newVideo.dateAdded = getDateAddedFromTikTokId(newVideo.id);
           sendToLog(logLevel.info, `Video ${queuePosition} processed: ${newVideo.url}`);
-          const isUsersVideosDuplicate = checkUsersVideosForDuplicates(req.user.user_id,
+          const isUsersVideosDuplicate = await checkUsersVideosForDuplicates(req.user.user_id,
             newVideo.id);
-          const isAllVideosDuplicate = checkAllVideosForDuplicates(newVideo.id);
+          const isAllVideosDuplicate = await checkAllVideosForDuplicates(newVideo.id);
           addVideo(isUsersVideosDuplicate, isAllVideosDuplicate, newVideo, req.user.user_id);
         }
         queuePosition += 1;
