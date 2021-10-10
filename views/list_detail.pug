@@ -1,7 +1,6 @@
 extends layout/header
 include layout/mixins/navigation
 include layout/mixins/popup-container
-include layout/mixins/tiktok-popup
 include layout/mixins/pages
 include layout/mixins/tiktok-container
 block layout
@@ -14,7 +13,7 @@ block layout
     list: true,
   })
 
-  +tiktokPopup
+  include layout/tiktok-popup
 
   .content
     if error

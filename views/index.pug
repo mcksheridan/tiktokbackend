@@ -1,8 +1,6 @@
 extends layout/header
 include layout/mixins/navigation
-include layout/mixins/bookmark-lists
 include layout/mixins/popup-container
-include layout/mixins/tiktok-popup
 include layout/mixins/pages
 include layout/mixins/tiktok-container
 block layout
@@ -11,14 +9,20 @@ block layout
     allVideos: true,
   })
 
-  +bookmarkLists
+  .bookmark-list--hidden
+    ul.bookmark-list_list
+      li
+        a(href=`/../bookmarks/1`).bookmark-list_link All Videos
+      each list in data.get_lists
+        li
+          a(href=`/../bookmarks/list/${list.list_id}`).bookmark-list_link !{list.name}
 
   +popupContainer({
     allVideos: true,
     list: false,
   })
 
-  +tiktokPopup
+  include layout/tiktok-popup
 
   .content
     if error
