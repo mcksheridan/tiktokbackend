@@ -14,10 +14,10 @@ mixin popupContainer(pageType)
           option(value=`${list.list_id}`).form_move-video-option !{list.name}
         button(class='popup_form-confirm form-button') Confirm
     if pageType.list
-      include ../../add-video-to-list
-      include ../../edit-list
-      include ../../sort-list
+      include ../../includes/add-video-to-list
+      include ../../includes/edit-list
+      include ../../includes/sort-list
     if pageType.allVideos
-      include ../../add-video
-      include ../../add-list
-      include ../../sort-video
+      include ../../includes/add-video
+      include ../../includes/add-list
+      include ../../includes/sort-video
