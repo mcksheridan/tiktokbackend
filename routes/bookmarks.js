@@ -23,6 +23,10 @@ router.use(userController.checkAuthentication);
 
 // Videos
 
+router.get('/user', (req, res) => {
+  res.render('user-account');
+});
+
 router.get('/:page', videoController.index);
 router.post('/:page', videoController.video_sort_post);
 
